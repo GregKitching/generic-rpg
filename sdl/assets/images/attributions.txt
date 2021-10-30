@@ -1,0 +1,7 @@
+"basictiles.png", "characters.png", "dead.png", "fontlarge.png", and "things.png" by Lanea Zimmerman: https://opengameart.org/content/tiny-16-basic
+Licensed under CC-BY 3.0: https://creativecommons.org/licenses/by/3.0/legalcode
+
+"basictilesmodified.png" modified by Gregory Kitching.
+
+"Items.png" by George Bailey: https://opengameart.org/content/16x16-game-assets
+Licensed under CC-BY 4.0: https://creativecommons.org/licenses/by/4.0/legalcode
