@@ -11,7 +11,7 @@ Description of program arguments:
 
 <map height>: Integer. Height of new map; ignored if <program mode> != 1 or <load from file> = 1
 
-<file name>: String. Map/tileset file to save to, and to load from if <load from file> = 1u
+<file name>: String. Map/tileset file to save to, and to load from if <load from file> = 1
 
 
 All arguments must be present for the program to run, even if they are not used. (Todo: implement a proper argument handler)
