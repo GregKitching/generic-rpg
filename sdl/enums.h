@@ -1,0 +1,8 @@
+#ifndef _ENUMS_
+#define _ENUMS_
+
+enum pmode{NORMAL_GAMEPLAY = 0, MAP_EDITOR = 1, TILESET_EDITOR = 2};
+enum movper{MOVEMENT_WALKABLE = 0, MOVEMENT_BLOCKED = 1, MOVEMENT_LAYER0 = 2, MOVEMENT_LAYER1 = 3};
+enum dir{DIR_DOWN = 0, DIR_LEFT = 1, DIR_RIGHT = 2, DIR_UP = 3};
+
+#endif

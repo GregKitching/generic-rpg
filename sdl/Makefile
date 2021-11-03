@@ -1,17 +1,20 @@
 CPP = g++
 CFLAGS = -03
 LDFLAGS =
-name = something
-
-all: $(name)
-clean:
-	rm -f $(name) *.o
-.PHONY: all clean
+DEPS = constants.h enums.h SpriteSheet.h Tile.h TileSet.h Map.h Entity.h
+OBJ = main.o SpriteSheet.o Tile.o TileSet.o Map.o Entity.o
 
 sdl_cflags := $(shell pkg-config --cflags sdl2 SDL2_mixer SDL2_image)
 sdl_libs := $(shell pkg-config --libs sdl2 SDL2_mixer SDL2_image)
 override CFLAGS += $(sdl_cflags)
 override LIBS += $(sdl_libs)
 
-$(name): $(name).o
+%.o: %.cpp $(DEPS)
+	$(CPP) $(LDFLAGS) -c -o $@ $< $(LIBS)
+
+main: $(OBJ)
 	$(CPP) $(LDFLAGS) -o $@ $^ $(LIBS)
+
+clean:
+	rm -f $(name) *.o
+.PHONY: all clean
