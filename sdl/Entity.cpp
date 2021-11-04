@@ -1,19 +1,25 @@
 #include <stdio.h>
 #include <string>
+#include <vector>
 
 #include "constants.h"
 #include "enums.h"
 #include "Map.h"
 #include "Entity.h"
 
-Entity::Entity(int x, int y, int s){
+Entity::Entity(enttype t, int x, int y, int s, bool a, bool r, bool sl, bool i, dir d){
+	type = t;
 	xpos = x;
 	ypos = y;
 	spritexpos = x * tilesize;
 	spriteypos = y * tilesize;
-	printf("%d, %d\n", spritexpos, spriteypos);
 	basesprite = s;
-	facing = DIR_DOWN;
+	animated = a;
+	rendered = r;
+	solid = sl;
+	interactable = i;
+	facing = d;
+	walkcycle = 0;
 	movedir = DIR_DOWN;
 	movetimer = 0;
 	oddwalkcycle = false;
@@ -23,6 +29,10 @@ Entity::Entity(int x, int y, int s){
 void Entity::setLocation(int x, int y){
 	xpos = x;
 	ypos = y;
+}
+
+enttype Entity::getType(){
+	return type;
 }
 
 int Entity::getXPos(){
@@ -42,46 +52,39 @@ int Entity::getSpriteYPos(){
 }
 
 int Entity::getSprite(){
-	return basesprite + ((int) facing * 12) + walkcycle;
-}
-
-void Entity::move2(int newx, int newy){
-	xpos = newx;
-	ypos = newy;
-	if(oddwalkcycle){
-		walkcycle = -1;
+	if(animated){
+		return basesprite + ((int) facing * 12) + walkcycle;
 	} else {
-		walkcycle = 1;
+		return basesprite;
 	}
-	movetimer = 16;
 }
 
-void Entity::move(dir direction, Map *map){
-	int newx = xpos;
-	int newy = ypos;
-	movedir = direction;
+dir Entity::getFacingDir(){
+	return facing;
+}
+
+void Entity::setFacingDir(dir direction){
 	facing = direction;
-	switch(direction){
-		case DIR_DOWN:
-		newy++;
-		break;
-		
-		case DIR_LEFT:
-		newx--;
-		break;
-		
-		case DIR_RIGHT:
-		newx++;
-		break;
-		
-		case DIR_UP:
-		newy--;
-		break;
+}
+
+bool Entity::canMove(int newx, int newy, dir direction, Map *map, std::vector<Entity> *entities){
+	if(newx == -1 || newy == -1){//Check if out of map bounds
+		return false;
 	}
-	if(newx < 0 || newx >= map->getWidth() || newy < 0 || newy >= map->getHeight()){
-		
-	} else {
-		if(map->getMovementPermission(newx, newy) == MOVEMENT_WALKABLE){
+	if(map->getMovementPermission(newx, newy) == MOVEMENT_BLOCKED){
+		return false;
+	}
+	if(map->getMovementPermission(newx, newy) == MOVEMENT_LAYER0 && currentmovper == MOVEMENT_LAYER1){
+		return false;
+	}
+	if(map->getMovementPermission(newx, newy) == MOVEMENT_LAYER1 && currentmovper == MOVEMENT_LAYER0){
+		return false;
+	}
+	for(int i = 0; i < entities->size(); i++){
+		if(entities->at(i).getXPos() == newx && entities->at(i).getYPos() == newy && entities->at(i).isSolid()){
+			return false;
+		}
+		/*if(map->getMovementPermission(newx, newy) == MOVEMENT_WALKABLE){
 			move2(newx, newy);
 			currentmovper = MOVEMENT_WALKABLE;
 		} else if (map->getMovementPermission(newx, newy) == MOVEMENT_LAYER0){
@@ -94,7 +97,25 @@ void Entity::move(dir direction, Map *map){
 				move2(newx, newy);
 				currentmovper = MOVEMENT_LAYER1;
 			}
+		}*/
+	}
+	return true;
+}
+
+void Entity::move(dir direction, Map *map, std::vector<Entity> *entities){
+	int *newpos = getAdjacentTile(direction, map);
+	movedir = direction;
+	facing = direction;
+	if(canMove(newpos[0], newpos[1], direction, map, entities)){
+		xpos = newpos[0];
+		ypos = newpos[1];
+		currentmovper = map->getMovementPermission(xpos, ypos);
+		if(oddwalkcycle){
+			walkcycle = -1;
+		} else {
+			walkcycle = 1;
 		}
+		movetimer = 16;
 	}
 }
 
@@ -126,4 +147,55 @@ void Entity::animate(){
 
 int Entity::getMoveTimer(){
 	return movetimer;
+}
+
+bool Entity::isAnimated(){
+	return animated;
+}
+
+bool Entity::isRendered(){
+	return rendered;
+}
+
+bool Entity::isSolid(){
+	return solid;
+}
+
+bool Entity::isInteractable(){
+	return interactable;
+}
+
+int* Entity::getAdjacentTile(dir direction, Map *map){
+	int *newpos = new int[2];
+	switch(direction){
+		case DIR_DOWN:
+		newpos[0] = xpos;
+		newpos[1] = ypos + 1;
+		break;
+		
+		case DIR_LEFT:
+		newpos[0] = xpos - 1;
+		newpos[1] = ypos;
+		break;
+		
+		case DIR_RIGHT:
+		newpos[0] = xpos + 1;
+		newpos[1] = ypos;
+		break;
+		
+		case DIR_UP:
+		newpos[0] = xpos;
+		newpos[1] = ypos - 1;
+		break;
+		
+		default:
+		newpos[0] = -1;
+		newpos[1] = -1;
+		break;
+	}
+	if(newpos[0] < 0 || newpos[0] >= map->getWidth() || newpos[1] < 0 || newpos[1] >= map->getHeight()){
+		newpos[0] = -1;
+		newpos[1] = -1;
+	}
+	return newpos;
 }

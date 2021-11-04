@@ -5,7 +5,7 @@
 #include <fstream>
 #include <string>
 #include <unistd.h>
-//#include <vector>
+#include <vector>
 
 #include "constants.h"
 #include "enums.h"
@@ -32,6 +32,7 @@ bool dkey = false;
 bool hkey = false;
 bool lkey = false;
 bool pkey = false;
+bool sckey = false;
 
 bool hidelayer1 = false;
 bool setmovementpermissions = false;
@@ -47,6 +48,8 @@ int mouseposy;
 pmode programmode;
 
 bool clickaction = false;
+
+bool caninteract = true;
 
 int currentlayer = 0;
 int currenttile = 0;
@@ -64,7 +67,10 @@ SpriteSheet *basic;
 SpriteSheet *characters;
 TileSet *tileset;
 Map *map;
-Entity *player;
+std::vector<Entity> entities;
+//Entity *player;
+
+int *visrange;
 
 SDL_Rect srcrecttiles;
 SDL_Rect dstrecttiles;
@@ -196,6 +202,37 @@ void setOutsideTile(Map *map, TileSet *tileset){
 	}
 }
 
+int getInteractableEntityAtPosition(int x, int y){
+	for(int i = 0; i < entities.size(); i++){
+		if(entities.at(i).getXPos() == x && entities.at(i).getYPos() == y && entities.at(i).isInteractable()){
+			return i;
+		}
+	}
+	return -1;
+}
+
+dir oppositeDir(dir direction){
+	dir u;
+	switch(direction){
+		case DIR_DOWN:
+		u = DIR_UP;
+		break;
+		
+		case DIR_LEFT:
+		u = DIR_RIGHT;
+		break;
+		
+		case DIR_RIGHT:
+		u = DIR_LEFT;
+		break;
+		
+		case DIR_UP:
+		u = DIR_DOWN;
+		break;
+	}
+	return u;
+}
+
 void visibleTiles(int *range, int x, int y){//, Map *map){
 	range[0] = (x / tilesize) - 1;
 	range[1] = range[0] + 14;
@@ -255,22 +292,25 @@ void renderLayer(int layer, Map *map, TileSet *tileset, SpriteSheet *spritesheet
 	}
 }
 
-void renderMap(Map *map, TileSet *tileset, SpriteSheet *spritesheet, SDL_Rect *srcrect, SDL_Rect *dstrect){
-	int range[4] = {0, 0, 0, 0};
-	visibleTiles(range, camposx, camposy);//, map);
+void renderMap(Map *map, TileSet *tileset, SpriteSheet *spritesheet, int *range, SDL_Rect *srcrect, SDL_Rect *dstrect){
 	renderLayer(0, map, tileset, spritesheet, range, srcrect, dstrect);
 	if(!hidelayer1){
 		renderLayer(1, map, tileset, spritesheet, range, srcrect, dstrect);
 	}
 }
 
-void renderEntity(Entity *entity, SpriteSheet *spritesheet, SDL_Rect *srcrect, SDL_Rect *dstrect){
-	int temp = entity->getSprite();
-	srcrect->x = spritesheet->getTileX(temp);
-	srcrect->y = spritesheet->getTileY(temp);
-	dstrect->x = entity->getSpriteXPos() - camposx;
-	dstrect->y = entity->getSpriteYPos() - camposy;
-	SDL_RenderCopy(renderer, spritesheet->getTexture(), srcrect, dstrect);
+void renderEntities(std::vector<Entity> *entities, SpriteSheet *spritesheet, int *range, SDL_Rect *srcrect, SDL_Rect *dstrect){
+	int temp;
+	for(int i = 0; i < entities->size(); i++){
+		if(entities->at(i).getXPos() > range[0] && entities->at(i).getXPos() <= range[1] && entities->at(i).getYPos() > range[2] && entities->at(i).getYPos() <= range[3] && entities->at(i).isRendered()){// == ENTTYPE_PLAYER || entities->at(i).getType() == ENTTYPE_NPC){
+			temp = entities->at(i).getSprite();
+			srcrect->x = spritesheet->getTileX(temp);
+			srcrect->y = spritesheet->getTileY(temp);
+			dstrect->x = entities->at(i).getSpriteXPos() - camposx;
+			dstrect->y = entities->at(i).getSpriteYPos() - camposy;
+			SDL_RenderCopy(renderer, spritesheet->getTexture(), srcrect, dstrect);
+		}
+	}
 }
 
 Uint32 callback(Uint32 interval, void *param){
@@ -297,9 +337,14 @@ Uint32 callback(Uint32 interval, void *param){
 				break;
 				
 				case SDLK_l:
-				if(programmode == TILESET_EDITOR){
+				lkey = true;
+				/*if(programmode == TILESET_EDITOR){
 					switchLayer();
-				}
+				}*/
+				break;
+				
+				case SDLK_SEMICOLON:
+				sckey = true;
 				break;
 				
 				case SDLK_t:
@@ -433,6 +478,15 @@ Uint32 callback(Uint32 interval, void *param){
 				pkey = false;
 				break;
 				
+				case SDLK_l:
+				lkey = false;
+				break;
+				
+				case SDLK_SEMICOLON:
+				sckey = false;
+				caninteract = true;
+				break;
+				
 				case SDLK_UP:
 				upkey = false;
 				break;
@@ -482,33 +536,39 @@ Uint32 callback(Uint32 interval, void *param){
 		}
 		pkey = false;
 	}
-	if(player->getMoveTimer() == 0){
-		if(akey && !dkey && !wkey && !skey){
-			player->move(DIR_LEFT, map);
-		} else if (dkey && !akey && !wkey && !skey){
-			player->move(DIR_RIGHT, map);
-		} else if (wkey && !skey){
-			player->move(DIR_UP, map);
-		} else if (skey && !wkey){
-			player->move(DIR_DOWN, map);
+	if(sckey && caninteract){
+		int *facingpos = entities.at(0).getAdjacentTile(entities.at(0).getFacingDir(), map);
+		int u = getInteractableEntityAtPosition(facingpos[0], facingpos[1]);
+		if(u != -1){
+			if(entities.at(u).getType() == ENTTYPE_NPC){
+				dir direction = oppositeDir(entities.at(0).getFacingDir());
+				entities.at(u).setFacingDir(direction);
+			}
 		}
-	} else if (player->getMoveTimer() > 0){
-		player->animate();
+		caninteract = false;
+	}
+	if(entities.at(0).getMoveTimer() == 0){
+		if(akey && !dkey && !wkey && !skey){
+			entities.at(0).move(DIR_LEFT, map, &entities);
+		} else if (dkey && !akey && !wkey && !skey){
+			entities.at(0).move(DIR_RIGHT, map, &entities);
+		} else if (wkey && !skey){
+			entities.at(0).move(DIR_UP, map, &entities);
+		} else if (skey && !wkey){
+			entities.at(0).move(DIR_DOWN, map, &entities);
+		}
+	} else if (entities.at(0).getMoveTimer() > 0){
+		entities.at(0).animate();
 	}
 	if(camerafollowplayer){
-		camposx = player->getSpriteXPos() - 92;
-		camposy = player->getSpriteYPos() - 67;
-		//printf("%d, %d\n", camposx, camposy);
+		camposx = entities.at(0).getSpriteXPos() - 92;
+		camposy = entities.at(0).getSpriteYPos() - 67;
 	}
-	//int a = player->getXPos();
-	/*moveup = false;
-	movedown = false;
-	moveleft = false;
-	moveright = false;*/
+	visibleTiles(visrange, camposx, camposy);
 	SDL_RenderClear(renderer);
-	renderMap(map, tileset, basic, &srcrectsubtiles, &dstrectsubtiles);
+	renderMap(map, tileset, basic, visrange, &srcrectsubtiles, &dstrectsubtiles);
 	if(programmode == NORMAL_GAMEPLAY){
-		renderEntity(player, characters, &srcrecttiles, &dstrecttiles);
+		renderEntities(&entities, characters, visrange, &srcrecttiles, &dstrecttiles);
 	}
 	SDL_RenderPresent(renderer);
 	return interval;
@@ -537,7 +597,11 @@ void init(int loadfromfile, int mapw, int maph, std::string fname){
 	} else {
 		surface = SDL_GetWindowSurface(window);
 	}
-	player = new Entity(9, 5, 4);
+	Entity *en;
+	en = new Entity(ENTTYPE_PLAYER, 9, 5, 4, true, true, true, true, DIR_DOWN);
+	entities.push_back(*en);
+	en = new Entity(ENTTYPE_NPC, 12, 10, 7, true, true, true, true, DIR_DOWN);
+	entities.push_back(*en);
 	srcrecttiles.x = 0;
 	srcrecttiles.y = 0;
 	srcrecttiles.w = tilesize;
@@ -575,6 +639,7 @@ void init(int loadfromfile, int mapw, int maph, std::string fname){
 		tileset = new TileSet(tilesetname);
 		map = new Map(mapname);
 	}
+	visrange = new int[4];
 	SDL_TimerID timerID = SDL_AddTimer(16, callback, NULL);
 }
 
@@ -611,7 +676,7 @@ int main(int argc, char **argv){
 	}
 	init(loadfromfile, mapw, maph, fname);
 	while(active){
-		usleep(60000);
+		usleep(33333);
 	}
 	quit();
 	return 0;

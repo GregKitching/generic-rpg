@@ -16,5 +16,5 @@ main: $(OBJ)
 	$(CPP) $(LDFLAGS) -o $@ $^ $(LIBS)
 
 clean:
-	rm -f $(name) *.o
+	rm -f main *.o
 .PHONY: all clean
