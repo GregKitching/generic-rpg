@@ -1,5 +1,5 @@
 #ifndef _MAP_
-#define _MAP
+#define _MAP_
 
 class Map{
 	private:

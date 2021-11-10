@@ -3,11 +3,19 @@
 #include <vector>
 
 #include "constants.h"
+#include "Globals.h"
 #include "enums.h"
 #include "Map.h"
 #include "Entity.h"
 
-Entity::Entity(enttype t, int x, int y, int s, bool a, bool r, bool sl, bool i, dir d){
+uint8_t *heap;
+TextBox *maintextbox;
+std::vector<Entity> entities;
+Map *map;
+bool caninteract;
+bool canmove;
+
+Entity::Entity(enttype t, int x, int y, int s, bool a, bool r, bool sl, bool i, dir d, std::string sc){
 	type = t;
 	xpos = x;
 	ypos = y;
@@ -19,6 +27,7 @@ Entity::Entity(enttype t, int x, int y, int s, bool a, bool r, bool sl, bool i, 
 	solid = sl;
 	interactable = i;
 	facing = d;
+	script = sc;
 	walkcycle = 0;
 	movedir = DIR_DOWN;
 	movetimer = 0;
@@ -67,7 +76,7 @@ void Entity::setFacingDir(dir direction){
 	facing = direction;
 }
 
-bool Entity::canMove(int newx, int newy, dir direction, Map *map, std::vector<Entity> *entities){
+bool Entity::canMove(int newx, int newy, dir direction){//, Map *map, std::vector<Entity> *entities){
 	if(newx == -1 || newy == -1){//Check if out of map bounds
 		return false;
 	}
@@ -80,8 +89,8 @@ bool Entity::canMove(int newx, int newy, dir direction, Map *map, std::vector<En
 	if(map->getMovementPermission(newx, newy) == MOVEMENT_LAYER1 && currentmovper == MOVEMENT_LAYER0){
 		return false;
 	}
-	for(int i = 0; i < entities->size(); i++){
-		if(entities->at(i).getXPos() == newx && entities->at(i).getYPos() == newy && entities->at(i).isSolid()){
+	for(int i = 0; i < entities.size(); i++){
+		if(entities.at(i).getXPos() == newx && entities.at(i).getYPos() == newy && entities.at(i).isSolid()){
 			return false;
 		}
 		/*if(map->getMovementPermission(newx, newy) == MOVEMENT_WALKABLE){
@@ -102,11 +111,11 @@ bool Entity::canMove(int newx, int newy, dir direction, Map *map, std::vector<En
 	return true;
 }
 
-void Entity::move(dir direction, Map *map, std::vector<Entity> *entities){
+void Entity::move(dir direction){//, Map *map, std::vector<Entity> *entities){
 	int *newpos = getAdjacentTile(direction, map);
 	movedir = direction;
 	facing = direction;
-	if(canMove(newpos[0], newpos[1], direction, map, entities)){
+	if(canMove(newpos[0], newpos[1], direction)){//, map, entities)){
 		xpos = newpos[0];
 		ypos = newpos[1];
 		currentmovper = map->getMovementPermission(xpos, ypos);
@@ -198,4 +207,8 @@ int* Entity::getAdjacentTile(dir direction, Map *map){
 		newpos[1] = -1;
 	}
 	return newpos;
+}
+
+std::string Entity::getScript(){
+	return script;
 }

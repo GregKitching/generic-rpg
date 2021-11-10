@@ -19,9 +19,10 @@ class Entity{
 		int movetimer;
 		bool oddwalkcycle;
 		movper currentmovper;
-		bool canMove(int newx, int newy, dir direction, Map *map, std::vector<Entity> *entities);
+		std::string script;
+		bool canMove(int newx, int newy, dir direction);//, Map *map, std::vector<Entity> *entities);
 	public:
-		Entity(enttype t, int x, int y, int s, bool a, bool r, bool sl, bool i, dir d);
+		Entity(enttype t, int x, int y, int s, bool a, bool r, bool sl, bool i, dir d, std::string sc);
 		void setLocation(int x, int y);
 		enttype getType();
 		int getXPos();
@@ -31,7 +32,7 @@ class Entity{
 		int getSprite();
 		dir getFacingDir();
 		void setFacingDir(dir direction);
-		void move(dir direction, Map *map, std::vector<Entity> *entities);
+		void move(dir direction);//, Map *map, std::vector<Entity> *entities);
 		void animate();
 		int getMoveTimer();
 		bool isAnimated();
@@ -39,6 +40,7 @@ class Entity{
 		bool isSolid();
 		bool isInteractable();
 		int* getAdjacentTile(dir direction, Map *map);
+		std::string getScript();
 };
 
 #endif

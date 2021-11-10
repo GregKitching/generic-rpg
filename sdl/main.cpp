@@ -1,5 +1,6 @@
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_image.h>
+//#include <SDL2/SDL_ttf.h>
 #include <stdio.h>
 #include <iostream>
 #include <fstream>
@@ -8,12 +9,16 @@
 #include <vector>
 
 #include "constants.h"
+#include "ScriptDefs.h"
 #include "enums.h"
 #include "SpriteSheet.h"
 #include "Tile.h"
 #include "TileSet.h"
 #include "Map.h"
 #include "Entity.h"
+#include "TextBox.h"
+#include "Script.h"
+#include "Globals.h"
 
 //using namespace std;
 
@@ -45,11 +50,16 @@ int camposy;
 int mouseposx;
 int mouseposy;
 
+int test = 0;
+
 pmode programmode;
 
 bool clickaction = false;
+//bool buttonaction = false;
+//bool caninteract;
+//bool canmove;
 
-bool caninteract = true;
+Script *currentscript = NULL;
 
 int currentlayer = 0;
 int currenttile = 0;
@@ -65,10 +75,12 @@ SDL_Event e;
 
 SpriteSheet *basic;
 SpriteSheet *characters;
+SpriteSheet *font;
 TileSet *tileset;
-Map *map;
-std::vector<Entity> entities;
-//Entity *player;
+//Map *map;
+//std::vector<Entity> entities;
+SDL_Texture *textboxtexture = NULL;
+SDL_Texture *letterA = NULL;
 
 int *visrange;
 
@@ -76,20 +88,104 @@ SDL_Rect srcrecttiles;
 SDL_Rect dstrecttiles;
 SDL_Rect srcrectsubtiles;
 SDL_Rect dstrectsubtiles;
+SDL_Rect srcrecttext;
+SDL_Rect dstrecttext;
 
 std::string basicspritesheetname;
 std::string characterspritesheetname;
+std::string fontspritesheetname;
+std::string textboxspritesheetname;
 std::string tilesetname;
 std::string mapname;
 
+//uint8_t *heap;
+//TextBox *maintextbox;
+
 void quit(){
+	//texture->free();
+	//letterA->free();
+	//TTF_CloseFont(font);
+	//font = NULL;
 	SDL_FreeSurface(surface);
 	surface = NULL;
+	SDL_DestroyRenderer(renderer);
+	renderer = NULL;
 	SDL_DestroyWindow(window);
 	window = NULL;
+	//TTF_Quit();
+	IMG_Quit();
 	SDL_Quit();
 	active = false;
 }
+
+/*void createCharTex(std::string a, SDL_Color colour){
+	SDL_Surface *tempsurface = TTF_RenderText_Solid(font, a.c_str(), colour);
+	if(tempsurface == NULL){
+		printf("Fail\n");
+	} else {
+		letterA = SDL_CreateTextureFromSurface(renderer, tempsurface);
+		if(letterA == NULL){
+			printf("Failed to load texture.\n");
+		}
+		ww = tempsurface->w;
+		hh = tempsurface->h;
+		printf("%d, %d\n", ww, hh);
+	}
+	SDL_FreeSurface(tempsurface);
+}*/
+
+void createScript(int u){
+	currentscript = new Script(u, entities.at(u).getScript());
+	//currentscript->executeCommand();
+	/*std::ifstream scriptfile;
+	std::string line;
+	scriptfile.open(script.c_str());
+	if(!scriptfile.is_open()){
+		printf("Failed to open script file \"%s\".\n", script.c_str());
+	} else {
+		std::vector<command> commands;
+		std::vector<std::string> arguments;
+		command tempcommand = CMD_NOP;
+		while(tempcommand != CMD_ENDSCRIPT){
+			getline(scriptfile, line);
+			tempcommand = (command) std::stoi(line);
+			commands.push_back(tempcommand);
+			if(tempcommand == CMD_DISPLAYTEXT || tempcommand == CMD_NPCFACEPLAYER){
+				getline(scriptfile, line);
+				arguments.push_back(line);
+			}
+		}
+		scriptfile.close();
+		int argumentpos = 0;
+		for(int i = 0; i < commands.size(); i++){
+			switch(commands.at(i)){
+				case CMD_DISPLAYTEXT:
+				maintextbox->setVisible(true);
+				maintextbox->setText(arguments.at(argumentpos));
+				argumentpos++;
+				break;
+				
+				case CMD_DISABLEMOVE:
+				canmove = false;
+				caninteract = false;
+				break;
+				
+				case CMD_ENABLEMOVE:
+				canmove = true;
+				caninteract = true;
+				break;
+				
+				case CMD_NPCFACEPLAYER:
+				int u = std::stoi(arguments.at(argumentpos));
+				argumentpos++;
+				entities.at(u).setFacingDir(oppositeDir(entities.at(0).getFacingDir()));
+				break;
+			}
+		}
+		commands.clear();
+		arguments.clear();
+	}*/
+}		
 
 void switchLayer(){
 	int temp;
@@ -211,28 +307,6 @@ int getInteractableEntityAtPosition(int x, int y){
 	return -1;
 }
 
-dir oppositeDir(dir direction){
-	dir u;
-	switch(direction){
-		case DIR_DOWN:
-		u = DIR_UP;
-		break;
-		
-		case DIR_LEFT:
-		u = DIR_RIGHT;
-		break;
-		
-		case DIR_RIGHT:
-		u = DIR_LEFT;
-		break;
-		
-		case DIR_UP:
-		u = DIR_DOWN;
-		break;
-	}
-	return u;
-}
-
 void visibleTiles(int *range, int x, int y){//, Map *map){
 	range[0] = (x / tilesize) - 1;
 	range[1] = range[0] + 14;
@@ -313,6 +387,42 @@ void renderEntities(std::vector<Entity> *entities, SpriteSheet *spritesheet, int
 	}
 }
 
+/*void renderTextBox(TextBox *t){
+	t->render(renderer);
+}
+
+void renderText(SDL_Rect *srcrect, SDL_Rect *dstrect){
+	SDL_RenderCopy(renderer, letterA, srcrect, dstrect);
+}*/
+
+void buttonAction(){
+	test++;
+	printf("%d\n", test);
+	if(caninteract){
+		printf("1\n");
+		caninteract = false;
+		int *facingpos = entities.at(0).getAdjacentTile(entities.at(0).getFacingDir(), map);
+		int u = getInteractableEntityAtPosition(facingpos[0], facingpos[1]);
+		delete facingpos;
+		if(u != -1){
+			if(entities.at(u).getType() == ENTTYPE_NPC){
+				createScript(u);
+				//dir direction = oppositeDir(entities.at(0).getFacingDir());
+				//entities.at(u).setFacingDir(direction);
+			}
+		}
+	} else {
+		printf("2\n");
+		if(currentscript != NULL){
+			if(currentscript->waitingForInput()){
+				currentscript->advance();
+				printf("h\n");
+			}
+		}
+		//caninteract = true;
+	}
+}
+
 Uint32 callback(Uint32 interval, void *param){
 	SDL_PollEvent(&e);
 	if(e.type == SDL_QUIT){
@@ -345,6 +455,7 @@ Uint32 callback(Uint32 interval, void *param){
 				
 				case SDLK_SEMICOLON:
 				sckey = true;
+				buttonAction();
 				break;
 				
 				case SDLK_t:
@@ -484,7 +595,7 @@ Uint32 callback(Uint32 interval, void *param){
 				
 				case SDLK_SEMICOLON:
 				sckey = false;
-				caninteract = true;
+				//caninteract = true;
 				break;
 				
 				case SDLK_UP:
@@ -536,40 +647,64 @@ Uint32 callback(Uint32 interval, void *param){
 		}
 		pkey = false;
 	}
-	if(sckey && caninteract){
-		int *facingpos = entities.at(0).getAdjacentTile(entities.at(0).getFacingDir(), map);
-		int u = getInteractableEntityAtPosition(facingpos[0], facingpos[1]);
-		if(u != -1){
-			if(entities.at(u).getType() == ENTTYPE_NPC){
-				dir direction = oppositeDir(entities.at(0).getFacingDir());
-				entities.at(u).setFacingDir(direction);
+	/*if(sckey){
+		if(caninteract){
+			int *facingpos = entities.at(0).getAdjacentTile(entities.at(0).getFacingDir(), map);
+			int u = getInteractableEntityAtPosition(facingpos[0], facingpos[1]);
+			delete facingpos;
+			if(u != -1){
+				if(entities.at(u).getType() == ENTTYPE_NPC){
+					createScript(u);
+					//dir direction = oppositeDir(entities.at(0).getFacingDir());
+					//entities.at(u).setFacingDir(direction);
+				}
 			}
+			caninteract = false;
+		} else {
+			if(currentscript != NULL){
+				currentscript->advance();
+				printf("h\n");
+			}
+			caninteract = true;
 		}
-		caninteract = false;
-	}
-	if(entities.at(0).getMoveTimer() == 0){
+		sckey = false;
+	}*/
+	if(entities.at(0).getMoveTimer() == 0 && canmove){
 		if(akey && !dkey && !wkey && !skey){
-			entities.at(0).move(DIR_LEFT, map, &entities);
+			entities.at(0).move(DIR_LEFT);//, map, &entities);
 		} else if (dkey && !akey && !wkey && !skey){
-			entities.at(0).move(DIR_RIGHT, map, &entities);
+			entities.at(0).move(DIR_RIGHT);//, map, &entities);
 		} else if (wkey && !skey){
-			entities.at(0).move(DIR_UP, map, &entities);
+			entities.at(0).move(DIR_UP);//, map, &entities);
 		} else if (skey && !wkey){
-			entities.at(0).move(DIR_DOWN, map, &entities);
+			entities.at(0).move(DIR_DOWN);//, map, &entities);
 		}
-	} else if (entities.at(0).getMoveTimer() > 0){
-		entities.at(0).animate();
+	}
+	for(int i = 0; i < entities.size(); i++){
+		if (entities.at(i).getMoveTimer() > 0){
+			entities.at(i).animate();
+		}
 	}
 	if(camerafollowplayer){
 		camposx = entities.at(0).getSpriteXPos() - 92;
 		camposy = entities.at(0).getSpriteYPos() - 67;
 	}
+	/*if(currentscript != NULL){
+		currentscript->tick();
+	}*/
 	visibleTiles(visrange, camposx, camposy);
 	SDL_RenderClear(renderer);
 	renderMap(map, tileset, basic, visrange, &srcrectsubtiles, &dstrectsubtiles);
 	if(programmode == NORMAL_GAMEPLAY){
 		renderEntities(&entities, characters, visrange, &srcrecttiles, &dstrecttiles);
 	}
+	if(maintextbox->getVisible()){
+		maintextbox->render(renderer);
+		maintextbox->renderText(renderer, font);
+	}
+	/*if(currentscript != NULL){
+		currentscript->tick();
+	}*/
 	SDL_RenderPresent(renderer);
 	return interval;
 }
@@ -597,10 +732,15 @@ void init(int loadfromfile, int mapw, int maph, std::string fname){
 	} else {
 		surface = SDL_GetWindowSurface(window);
 	}
+	/*if(TTF_Init() == -1){
+		printf("Could not initialize SDL_TTF.\n");
+	}*/
+	caninteract = true;
+	canmove = true;
 	Entity *en;
-	en = new Entity(ENTTYPE_PLAYER, 9, 5, 4, true, true, true, true, DIR_DOWN);
+	en = new Entity(ENTTYPE_PLAYER, 9, 5, 4, true, true, true, true, DIR_DOWN, "");
 	entities.push_back(*en);
-	en = new Entity(ENTTYPE_NPC, 12, 10, 7, true, true, true, true, DIR_DOWN);
+	en = new Entity(ENTTYPE_NPC, 12, 10, 7, true, true, true, true, DIR_DOWN, "aaac");
 	entities.push_back(*en);
 	srcrecttiles.x = 0;
 	srcrecttiles.y = 0;
@@ -618,8 +758,20 @@ void init(int loadfromfile, int mapw, int maph, std::string fname){
 	dstrectsubtiles.y = 0;
 	dstrectsubtiles.w = subtilesize;
 	dstrectsubtiles.h = subtilesize;
+	srcrecttext.x = 0;
+	srcrecttext.y = 0;
+	srcrecttext.w = subtilesize;
+	srcrecttext.h = subtilesize;
+	dstrecttext.x = 0;
+	dstrecttext.y = 0;
+	dstrecttext.w = subtilesize;
+	dstrecttext.h = subtilesize;
 	basic = new SpriteSheet(basicspritesheetname, 8, 15, renderer);//Defined in terms of 16x16 tiles
 	characters = new SpriteSheet(characterspritesheetname, 12, 8, renderer);
+	font = new SpriteSheet(fontspritesheetname, 16, 3, renderer);
+	SpriteSheet *textboxspritesheet = new SpriteSheet(textboxspritesheetname, 1, 1, renderer);
+	textboxtexture = textboxspritesheet->getTexture();
+	textboxspritesheet = NULL;
 	if(programmode == MAP_EDITOR){
 		tileset = new TileSet(tilesetname);
 		if(loadfromfile == 0){
@@ -640,6 +792,17 @@ void init(int loadfromfile, int mapw, int maph, std::string fname){
 		map = new Map(mapname);
 	}
 	visrange = new int[4];
+	maintextbox = new TextBox(0, 83, 200, 67, textboxtexture);
+	/*white.r = 255;
+	white.g = 255;
+	white.b = 255;
+	white.a = 255;
+	font = TTF_OpenFont("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf", 28);
+	if(font == NULL){
+		printf("Failed to load font.\n");
+	}*/
+	//createCharTex("A", white);
+	heap = new uint8_t[256];
 	SDL_TimerID timerID = SDL_AddTimer(16, callback, NULL);
 }
 
@@ -664,6 +827,8 @@ int main(int argc, char **argv){
 	std::string fname = argv[5];
 	basicspritesheetname = "assets/images/basictilesmodified.png";
 	characterspritesheetname = "assets/images/characters.png";
+	fontspritesheetname = "assets/images/font.png";
+	textboxspritesheetname = "assets/images/textbox.png";
 	if(programmode == MAP_EDITOR){
 		tilesetname = "assets/tileset.txt";
 		mapname = argv[5];
@@ -676,7 +841,18 @@ int main(int argc, char **argv){
 	}
 	init(loadfromfile, mapw, maph, fname);
 	while(active){
-		usleep(33333);
+		if(currentscript == NULL){
+			usleep(16666);
+		} else {
+			if(currentscript->waitingForInput()){
+				usleep(16666);
+			} else {
+				if(currentscript->executeCommand()){
+					delete currentscript;
+					currentscript = NULL;
+				}
+			}
+		}
 	}
 	quit();
 	return 0;
