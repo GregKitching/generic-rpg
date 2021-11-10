@@ -1,0 +1,88 @@
+No Arguments
+
+nop
+Does nothing
+
+return
+Return control to calling script, or player if first script
+
+halt
+Halts player movement
+
+unhalt
+Unhalts player movement
+
+faceplayer
+Makes the entity the player is currently interacting with face the player
+
+
+
+1 int
+
+branch(var)
+Increments the program counter by the value of var (in addition to the usual incrementation).
+Meant to be followed by JMP instructions
+
+wait(num)
+Wait
+
+settextboxvisible(num)
+Sets text box #num to visible
+
+settextboxinvisible(num)
+Sets text box #num to invisible
+
+facecurrent(num direction)
+Makes the entity the player is currently interacting with face direction
+
+movecurrent(num direction)
+Makes the entity the player is currently interacting with move in direction
+
+
+
+1 Address
+
+jump(script)
+Jump to another script
+
+jumpsubroutine(script)
+Load another script, returning to where the calling script left off
+
+display(text)
+Displays text in text box 0
+
+
+
+2 ints
+
+store(var, num)
+Stores num in variable var
+
+copy(var 1, var 2)
+Copies var 2 to var 1
+
+increment(var, num)
+Increments var by num
+
+decrement(var, num)
+Decrements var by num
+
+face(num entity, num direction)
+Makes entity face direction
+
+
+
+3 ints
+
+add(var 1, var 2, var 3)
+var 1 = var 2 + var 3
+
+subtract(var 1, var 2, var 3)
+var 1 = var 2 - var 3
+
+
+
+2 ints, 1 address
+
+choose(var, num, text)
+Gives the player num choices in text box 1, numbered 0 to num - 1, and stores their choice in var

@@ -1,0 +1,10 @@
+halt
+faceplayer
+settextboxvisible(0)
+display(aaaa)
+settextboxinvisible(0)
+wait(20)
+movecurrent(up)
+move(1, right)
+unhalt
+return
