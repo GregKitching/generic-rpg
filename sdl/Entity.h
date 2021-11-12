@@ -16,9 +16,11 @@ class Entity{
 		bool rendered;
 		bool solid;
 		bool interactable;
+		bool busy;
 		int movetimer;
 		bool oddwalkcycle;
 		movper currentmovper;
+		entstate state;
 		std::string script;
 		bool canMove(int newx, int newy, dir direction);//, Map *map, std::vector<Entity> *entities);
 	public:
@@ -33,7 +35,7 @@ class Entity{
 		dir getFacingDir();
 		void setFacingDir(dir direction);
 		void move(dir direction);//, Map *map, std::vector<Entity> *entities);
-		void animate();
+		void animateMove();
 		int getMoveTimer();
 		bool isAnimated();
 		bool isRendered();
@@ -41,6 +43,8 @@ class Entity{
 		bool isInteractable();
 		int* getAdjacentTile(dir direction, Map *map);
 		std::string getScript();
+		void tick();
+		entstate getState();
 };
 
 #endif

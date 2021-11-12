@@ -15,6 +15,9 @@ Unhalts player movement
 faceplayer
 Makes the entity the player is currently interacting with face the player
 
+waitforcurrententity
+waits until the current entity is finished moving before continuing
+
 
 
 1 int
@@ -37,6 +40,9 @@ Makes the entity the player is currently interacting with face direction
 
 movecurrent(num direction)
 Makes the entity the player is currently interacting with move in direction
+
+waitforentity(num)
+waits until entity num is finished moving before continuing
 
 
 

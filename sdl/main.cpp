@@ -50,8 +50,6 @@ int camposy;
 int mouseposx;
 int mouseposy;
 
-int test = 0;
-
 pmode programmode;
 
 bool clickaction = false;
@@ -75,7 +73,7 @@ SDL_Event e;
 
 SpriteSheet *basic;
 SpriteSheet *characters;
-SpriteSheet *font;
+//SpriteSheet *font;
 TileSet *tileset;
 //Map *map;
 //std::vector<Entity> entities;
@@ -98,6 +96,8 @@ std::string textboxspritesheetname;
 std::string tilesetname;
 std::string mapname;
 
+SDL_Thread *scriptthread;
+
 //uint8_t *heap;
 //TextBox *maintextbox;
 
@@ -106,6 +106,7 @@ void quit(){
 	//letterA->free();
 	//TTF_CloseFont(font);
 	//font = NULL;
+	SDL_DetachThread(scriptthread);
 	SDL_FreeSurface(surface);
 	surface = NULL;
 	SDL_DestroyRenderer(renderer);
@@ -396,8 +397,6 @@ void renderText(SDL_Rect *srcrect, SDL_Rect *dstrect){
 }*/
 
 void buttonAction(){
-	test++;
-	printf("%d\n", test);
 	if(caninteract){
 		printf("1\n");
 		caninteract = false;
@@ -414,16 +413,13 @@ void buttonAction(){
 	} else {
 		printf("2\n");
 		if(currentscript != NULL){
-			if(currentscript->waitingForInput()){
-				currentscript->advance();
-				printf("h\n");
-			}
+			currentscript->advance();
 		}
 		//caninteract = true;
 	}
 }
 
-Uint32 callback(Uint32 interval, void *param){
+Uint32 renderFunc(Uint32 interval, void *param){
 	SDL_PollEvent(&e);
 	if(e.type == SDL_QUIT){
 		active = false;
@@ -681,16 +677,22 @@ Uint32 callback(Uint32 interval, void *param){
 		}
 	}
 	for(int i = 0; i < entities.size(); i++){
+		if(entities.at(i).getMoveTimer() > 0){
+			entities.at(i).animateMove();
+		}
+	}
+	/*for(int i = 0; i < entities.size(); i++){
 		if (entities.at(i).getMoveTimer() > 0){
 			entities.at(i).animate();
 		}
-	}
+	}*/
 	if(camerafollowplayer){
+		//printf("cfp\n");
 		camposx = entities.at(0).getSpriteXPos() - 92;
 		camposy = entities.at(0).getSpriteYPos() - 67;
 	}
 	/*if(currentscript != NULL){
-		currentscript->tick();
+		currentscript->asyncRun();
 	}*/
 	visibleTiles(visrange, camposx, camposy);
 	SDL_RenderClear(renderer);
@@ -699,14 +701,30 @@ Uint32 callback(Uint32 interval, void *param){
 		renderEntities(&entities, characters, visrange, &srcrecttiles, &dstrecttiles);
 	}
 	if(maintextbox->getVisible()){
-		maintextbox->render(renderer);
-		maintextbox->renderText(renderer, font);
+		maintextbox->renderBox();
+		maintextbox->renderText();
+	}
+	if(maintextbox->isActive()){
+		maintextbox->tick();
 	}
 	/*if(currentscript != NULL){
 		currentscript->tick();
 	}*/
 	SDL_RenderPresent(renderer);
 	return interval;
+}
+
+int scriptThread(void *param){
+	while(active){
+		if(currentscript == NULL){
+			usleep(16666);
+		} else {
+			currentscript->run();
+			delete currentscript;
+			currentscript = NULL;
+		}
+	}
+	return 0;
 }
 
 void init(int loadfromfile, int mapw, int maph, std::string fname){
@@ -740,7 +758,7 @@ void init(int loadfromfile, int mapw, int maph, std::string fname){
 	Entity *en;
 	en = new Entity(ENTTYPE_PLAYER, 9, 5, 4, true, true, true, true, DIR_DOWN, "");
 	entities.push_back(*en);
-	en = new Entity(ENTTYPE_NPC, 12, 10, 7, true, true, true, true, DIR_DOWN, "aaac");
+	en = new Entity(ENTTYPE_NPC, 12, 10, 7, true, true, true, true, DIR_DOWN, "aaab");
 	entities.push_back(*en);
 	srcrecttiles.x = 0;
 	srcrecttiles.y = 0;
@@ -792,7 +810,7 @@ void init(int loadfromfile, int mapw, int maph, std::string fname){
 		map = new Map(mapname);
 	}
 	visrange = new int[4];
-	maintextbox = new TextBox(0, 83, 200, 67, textboxtexture);
+	maintextbox = new TextBox(4, 99, 192, 40, textboxtexture, font, renderer);//23x2 character display
 	/*white.r = 255;
 	white.g = 255;
 	white.b = 255;
@@ -803,7 +821,9 @@ void init(int loadfromfile, int mapw, int maph, std::string fname){
 	}*/
 	//createCharTex("A", white);
 	heap = new uint8_t[256];
-	SDL_TimerID timerID = SDL_AddTimer(16, callback, NULL);
+	SDL_TimerID timer1 = SDL_AddTimer(16, renderFunc, NULL);
+	//SDL_TimerID timer2 = SDL_AddTimer(0, scriptFunc, NULL);
+	scriptthread = SDL_CreateThread(scriptThread, "scriptThread", (void*) NULL);
 }
 
 int main(int argc, char **argv){
@@ -841,18 +861,14 @@ int main(int argc, char **argv){
 	}
 	init(loadfromfile, mapw, maph, fname);
 	while(active){
-		if(currentscript == NULL){
+		usleep(16666);
+		/*if(currentscript == NULL){
 			usleep(16666);
 		} else {
-			if(currentscript->waitingForInput()){
-				usleep(16666);
-			} else {
-				if(currentscript->executeCommand()){
-					delete currentscript;
-					currentscript = NULL;
-				}
-			}
-		}
+			currentscript->run();
+			delete currentscript;
+			currentscript = NULL;
+		}*/
 	}
 	quit();
 	return 0;

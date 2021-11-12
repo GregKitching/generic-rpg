@@ -3,6 +3,8 @@
 
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_image.h>
+#include <iostream>
+#include <fstream>
 
 #include "constants.h"
 #include "ScriptDefs.h"
@@ -21,5 +23,7 @@ extern std::vector<Entity> entities;
 extern Map *map;
 extern bool caninteract;
 extern bool canmove;
+//extern SDL_Texture textboxtexture;
+extern SpriteSheet *font;
 
 #endif

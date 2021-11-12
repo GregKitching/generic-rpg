@@ -14,6 +14,7 @@ std::vector<Entity> entities;
 Map *map;
 bool caninteract;
 bool canmove;
+SpriteSheet *font;
 
 Entity::Entity(enttype t, int x, int y, int s, bool a, bool r, bool sl, bool i, dir d, std::string sc){
 	type = t;
@@ -33,6 +34,7 @@ Entity::Entity(enttype t, int x, int y, int s, bool a, bool r, bool sl, bool i, 
 	movetimer = 0;
 	oddwalkcycle = false;
 	currentmovper = MOVEMENT_WALKABLE;
+	state = ENTSTATE_NONE;
 }
 
 void Entity::setLocation(int x, int y){
@@ -116,6 +118,7 @@ void Entity::move(dir direction){//, Map *map, std::vector<Entity> *entities){
 	movedir = direction;
 	facing = direction;
 	if(canMove(newpos[0], newpos[1], direction)){//, map, entities)){
+		state = ENTSTATE_MOVING;
 		xpos = newpos[0];
 		ypos = newpos[1];
 		currentmovper = map->getMovementPermission(xpos, ypos);
@@ -125,10 +128,11 @@ void Entity::move(dir direction){//, Map *map, std::vector<Entity> *entities){
 			walkcycle = 1;
 		}
 		movetimer = 16;
+		printf("%d\n", movetimer);
 	}
 }
 
-void Entity::animate(){
+void Entity::animateMove(){
 	switch(movedir){
 		case DIR_DOWN:
 		spriteypos++;
@@ -151,6 +155,7 @@ void Entity::animate(){
 		walkcycle = 0;
 	} else if (movetimer == 0){
 		oddwalkcycle = !oddwalkcycle;
+		state = ENTSTATE_NONE;
 	}
 }
 
@@ -211,4 +216,25 @@ int* Entity::getAdjacentTile(dir direction, Map *map){
 
 std::string Entity::getScript(){
 	return script;
+}
+
+void Entity::tick(){
+	switch(state){
+		case ENTSTATE_NONE:
+		break;
+		
+		case ENTSTATE_MOVING:
+		animateMove();
+		break;
+		
+		case ENTSTATE_TURNING:
+		break;
+		
+		case ENTSTATE_WAITING:
+		break;
+	}
+}
+
+entstate Entity::getState(){
+	return state;
 }

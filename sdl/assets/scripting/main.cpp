@@ -12,12 +12,14 @@ std::regex rtn("return");
 std::regex hlt("halt");
 std::regex uhl("unhalt");
 std::regex fcp("faceplayer");
+std::regex wce("waitforcurrententity");
 std::regex bch("branch\\([0-9]+\\)");
 std::regex wai("wait\\([0-9]+\\)");
 std::regex stv("settextboxvisible\\([0-9]+\\)");
 std::regex sti("settextboxinvisible\\([0-9]+\\)");
 std::regex fcc("facecurrent\\((up|down|left|right)\\)");
 std::regex mvc("movecurrent\\((up|down|left|right)\\)");
+std::regex wfe("waitforentity\\([0-9]+\\)");
 std::regex jmp("jump\\([a-z]{4}\\)");
 std::regex jsr("jumpsubroutine\\([a-z]{4}\\)");
 std::regex dsp("display\\([a-z]{4}\\)");
@@ -137,47 +139,37 @@ int main(int argc, char **argv){
 			bin.push_back(3);
 		} else if (regex_match(line, s, fcp)){
 			bin.push_back(4);
-		} else if (regex_match(line, s, bch)){
+		} else if (regex_match(line, s, wce)){
 			bin.push_back(5);
-			oneArg(u, line);
-			bin.push_back(stoi(u[0]));
-		} else if (regex_match(line, s, wai)){
+		} else if (regex_match(line, s, bch)){
 			bin.push_back(6);
 			oneArg(u, line);
 			bin.push_back(stoi(u[0]));
-		} else if (regex_match(line, s, stv)){
+		} else if (regex_match(line, s, wai)){
 			bin.push_back(7);
 			oneArg(u, line);
 			bin.push_back(stoi(u[0]));
-		} else if (regex_match(line, s, sti)){
+		} else if (regex_match(line, s, stv)){
 			bin.push_back(8);
 			oneArg(u, line);
 			bin.push_back(stoi(u[0]));
-		} else if (regex_match(line, s, fcc)){
+		} else if (regex_match(line, s, sti)){
 			bin.push_back(9);
 			oneArg(u, line);
-			bin.push_back(dirVal(u[0], &s));
-		} else if (regex_match(line, s, mvc)){
+			bin.push_back(stoi(u[0]));
+		} else if (regex_match(line, s, fcc)){
 			bin.push_back(10);
 			oneArg(u, line);
 			bin.push_back(dirVal(u[0], &s));
-		} else if (regex_match(line, s, jmp)){
+		} else if (regex_match(line, s, mvc)){
 			bin.push_back(11);
 			oneArg(u, line);
-			charval(u2, u[0]);
-			bin.push_back(u2[0]);
-			bin.push_back(u2[1]);
-			bin.push_back(u2[2]);
-			bin.push_back(u2[3]);
-		} else if (regex_match(line, s, jsr)){
+			bin.push_back(dirVal(u[0], &s));
+		} else if (regex_match(line, s, wfe)){
 			bin.push_back(12);
 			oneArg(u, line);
-			charval(u2, u[0]);
-			bin.push_back(u2[0]);
-			bin.push_back(u2[1]);
-			bin.push_back(u2[2]);
-			bin.push_back(u2[3]);
-		} else if (regex_match(line, s, dsp)){
+			bin.push_back(stoi(u[0]));
+		} else if (regex_match(line, s, jmp)){
 			bin.push_back(13);
 			oneArg(u, line);
 			charval(u2, u[0]);
@@ -185,50 +177,66 @@ int main(int argc, char **argv){
 			bin.push_back(u2[1]);
 			bin.push_back(u2[2]);
 			bin.push_back(u2[3]);
-		} else if (regex_match(line, s, str)){
+		} else if (regex_match(line, s, jsr)){
 			bin.push_back(14);
-			twoArgs(u, line);
-			bin.push_back(stoi(u[0]));
-			bin.push_back(stoi(u[1]));
-		} else if (regex_match(line, s, cpy)){
+			oneArg(u, line);
+			charval(u2, u[0]);
+			bin.push_back(u2[0]);
+			bin.push_back(u2[1]);
+			bin.push_back(u2[2]);
+			bin.push_back(u2[3]);
+		} else if (regex_match(line, s, dsp)){
 			bin.push_back(15);
-			twoArgs(u, line);
-			bin.push_back(stoi(u[0]));
-			bin.push_back(stoi(u[1]));
-		} else if (regex_match(line, s, inc)){
+			oneArg(u, line);
+			charval(u2, u[0]);
+			bin.push_back(u2[0]);
+			bin.push_back(u2[1]);
+			bin.push_back(u2[2]);
+			bin.push_back(u2[3]);
+		} else if (regex_match(line, s, str)){
 			bin.push_back(16);
 			twoArgs(u, line);
 			bin.push_back(stoi(u[0]));
 			bin.push_back(stoi(u[1]));
-		} else if (regex_match(line, s, dec)){
+		} else if (regex_match(line, s, cpy)){
 			bin.push_back(17);
 			twoArgs(u, line);
 			bin.push_back(stoi(u[0]));
 			bin.push_back(stoi(u[1]));
-		} else if (regex_match(line, s, fac)){
+		} else if (regex_match(line, s, inc)){
 			bin.push_back(18);
+			twoArgs(u, line);
+			bin.push_back(stoi(u[0]));
+			bin.push_back(stoi(u[1]));
+		} else if (regex_match(line, s, dec)){
+			bin.push_back(19);
+			twoArgs(u, line);
+			bin.push_back(stoi(u[0]));
+			bin.push_back(stoi(u[1]));
+		} else if (regex_match(line, s, fac)){
+			bin.push_back(20);
 			twoArgs(u, line);
 			bin.push_back(stoi(u[0]));
 			bin.push_back(dirVal(u[1], &s));
 		} else if (regex_match(line, s, mov)){
-			bin.push_back(19);
+			bin.push_back(21);
 			twoArgs(u, line);
 			bin.push_back(stoi(u[0]));
 			bin.push_back(dirVal(u[1], &s));
 		} else if (regex_match(line, s, add)){
-			bin.push_back(20);
+			bin.push_back(22);
 			threeArgs(u, line);
 			bin.push_back(stoi(u[0]));
 			bin.push_back(stoi(u[1]));
 			bin.push_back(stoi(u[2]));
 		} else if (regex_match(line, s, subcmd)){
-			bin.push_back(21);
+			bin.push_back(23);
 			threeArgs(u, line);
 			bin.push_back(stoi(u[0]));
 			bin.push_back(stoi(u[1]));
 			bin.push_back(stoi(u[2]));
 		} else if (regex_match(line, s, chs)){
-			bin.push_back(22);
+			bin.push_back(24);
 			threeArgs(u, line);
 			charval(u2, u[2]);
 			bin.push_back(stoi(u[0]));

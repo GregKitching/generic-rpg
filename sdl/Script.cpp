@@ -2,6 +2,7 @@
 #include <iostream>
 #include <fstream>
 #include <vector>
+#include <unistd.h>
 #include <sys/stat.h>
 
 #include "Globals.h"
@@ -15,6 +16,7 @@ extern std::vector<Entity> entities;
 extern Map *map;
 extern bool caninteract;
 extern bool canmove;
+extern SpriteSheet *font;
 
 struct stat result;
 //Script recursivescript = NULL;
@@ -87,16 +89,18 @@ Script::Script(int a, std::string filename){
 		for(int i = 0; i < arguments.size(); i++){
 			//printf("%d\n", (int) arguments.at(i));
 		}
-		//printf("\n%lu\n", commands.size());
+		//printf("c %lu\n", commands.size());
 		entitynum = a;
 		scriptfile.close();
 		commandpos = 0;
 		argumentpos = 0;
 		nextcommand = true;
 		intextbox = false;
-		waitforinput = false;
+		displayingtext = false;
+		//waitforinput = false;
 		waittimer = 0;
-		waitfortimer = false;
+		//waitfortimer = false;
+		scriptend = false;
 	}
 }
 
@@ -153,23 +157,26 @@ std::string Script::getStringArg(){
 	executeCommand();
 }*/
 
-void Script::advance(){
-	printf("advance\n");
-	//nextCommand = true;
-	waitforinput = false;
+void Script::waitForEntity(int ent){
+	while(entities.at(entitynum).getMoveTimer() != 0){
+		usleep(16666);
+	}
 }
 
-bool Script::executeCommand(){
-	bool u = false;
+void Script::executeCommand(){
+	//bool u = false;
 	int var1, var2, var3;
 	std::string path;
+	/*while(maintextbox->getVisible()){
+		usleep(16666);
+	}*/
 	switch(commands.at(commandpos)){
 		case CMD_NOP:
 		//nextcommand = true;
 		break;
 		
 		case CMD_RETURN:
-		u = true;
+		scriptend = true;
 		//destroy
 		break;
 		
@@ -190,8 +197,13 @@ bool Script::executeCommand(){
 		case CMD_FACEPLAYER:
 		//int u = getIntArg();
 		//argumentpos++;
+		waitForEntity(entitynum);
 		entities.at(entitynum).setFacingDir(oppositeDir(entities.at(0).getFacingDir()));
 		//nextCommand();
+		break;
+		
+		case CMD_WAITFORCURRENTENTITY:
+		waitForEntity(entitynum);
 		break;
 		
 		case CMD_BRANCH:
@@ -209,10 +221,11 @@ bool Script::executeCommand(){
 		switch(var1){
 			case 0:
 			maintextbox->setVisible(true);
+			intextbox = true;
 			break;
 		}
 		//nextCommand();
-		printf("CMD_SETTEXTBOXVISIBLE");
+		printf("CMD_SETTEXTBOXVISIBLE\n");
 		break;
 		
 		case CMD_SETTEXTBOXINVISIBLE:
@@ -220,22 +233,29 @@ bool Script::executeCommand(){
 		switch(var1){
 			case 0:
 			maintextbox->setVisible(false);
+			intextbox = false;
+			displayingtext = false;
 			break;
 		}
 		//nextCommand();
-		printf("CMD_SETTEXTBOXINVISIBLE");
+		printf("CMD_SETTEXTBOXINVISIBLE\n");
 		break;
 		
 		case CMD_FACECURRENT:
-		entities.at(entitynum).setFacingDir((dir) getIntArg());
+		var1 = getIntArg();
+		waitForEntity(entitynum);
+		entities.at(entitynum).setFacingDir((dir) var1);
 		//nextCommand();
 		break;
 		
 		case CMD_MOVECURRENT:
-		while(entities.at(entitynum).getMoveTimer() != 0){
-			
-		}
-		entities.at(entitynum).move((dir) getIntArg());
+		var1 = getIntArg();
+		waitForEntity(entitynum);
+		entities.at(entitynum).move((dir) var1);
+		break;
+		
+		case CMD_WAITFORENTITY:
+		waitForEntity(getIntArg());
 		break;
 		
 		case CMD_JUMP:
@@ -250,12 +270,17 @@ bool Script::executeCommand(){
 		break;
 		
 		case CMD_DISPLAY:
+		printf("CMD_DISPLAY\n");
 		path = getStringArg();
 		//printf("UUUU %s\n", path.c_str());
-		maintextbox->clearText();
-		maintextbox->setText(path);
-		waitforinput = true;
-		printf("CMD_DISPLAY");
+		printf("e\n");
+		maintextbox->reset();
+		printf("f\n");
+		maintextbox->loadFile(path);
+		displayingtext = true;
+		printf("g\n");
+		//intextbox = true;
+		//waitforinput = true;
 		break;
 		
 		case CMD_STORE:
@@ -285,15 +310,16 @@ bool Script::executeCommand(){
 		
 		case CMD_FACE:
 		var1 = getIntArg();
-		entities.at(var1).setFacingDir((dir) getIntArg());
+		var2 = getIntArg();
+		waitForEntity(var1);
+		entities.at(var1).setFacingDir((dir) var2);
 		break;
 		
 		case CMD_MOVE:
 		var1 = getIntArg();
-		while(entities.at(var1).getMoveTimer() != 0){
-			
-		}
-		entities.at(var1).move((dir) getIntArg());
+		var2 = getIntArg();
+		waitForEntity(var1);
+		entities.at(var1).move((dir) var2);
 		break;
 		
 		case CMD_ADD:
@@ -315,33 +341,29 @@ bool Script::executeCommand(){
 		break;
 	}
 	commandpos++;
-	return u;
+	//return u;
 }
 
-void Script::tick(){
+void Script::advance(){
+	if(maintextbox->getWaitForInput()){
+		maintextbox->input();
+		printf("advance\n");
+	}	
+}
+
+void Script::run(){
 	//printf("a\n");
-	if(waitfortimer){
-		if(waittimer > 0){
-			waittimer--;
-		} else {
-			waitfortimer = false;
-			waittimer = 0;
-			//nextCommand();
-		}
-	}/* else {
-		if(waitforinput){
-			printf("a\n");
-			if(cont){
-				waitforinput = false;
-				nextCommand();
+	while(!scriptend){
+		if(displayingtext){
+			while(maintextbox->isActive()){
+				usleep(16666);
 			}
-		}/* else {
-			if
-			executeCommand();
+			displayingtext = false;
 		}
-	}*/
+		executeCommand();
+	}
 }
 
 bool Script::waitingForInput(){
-	return waitforinput;
+	return 0;//waitforinput;
 }

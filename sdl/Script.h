@@ -14,19 +14,22 @@ class Script{
 		int commandpos;
 		int argumentpos;
 		bool intextbox;
-		bool waitforinput;
+		bool displayingtext;
+		//bool waitforinput;
 		int waittimer;
 		bool waitfortimer;
+		bool scriptend;
 		bool nextcommand;
 		dir oppositeDir(dir direction);
 		int getIntArg();
 		std::string getStringArg();
+		void waitForEntity(int ent);
 	public:
 		Script(int a, std::string filename);
 		~Script();
+		void executeCommand();
 		void advance();
-		bool executeCommand();
-		void tick();
+		void run();
 		bool waitingForInput();
 };
 
