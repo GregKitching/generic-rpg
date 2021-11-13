@@ -97,6 +97,7 @@ Script::Script(int a, std::string filename){
 		nextcommand = true;
 		intextbox = false;
 		displayingtext = false;
+		waiting = false;
 		//waitforinput = false;
 		waittimer = 0;
 		//waitfortimer = false;
@@ -158,8 +159,9 @@ std::string Script::getStringArg(){
 }*/
 
 void Script::waitForEntity(int ent){
-	while(entities.at(entitynum).getMoveTimer() != 0){
-		usleep(16666);
+	while(entities.at(ent).isBusy()){
+		//usleep(16666);
+		//printf("waitforentity2\n");
 	}
 }
 
@@ -169,6 +171,9 @@ void Script::executeCommand(){
 	std::string path;
 	/*while(maintextbox->getVisible()){
 		usleep(16666);
+	}*/
+	/*while(waiting){
+		printf("waiting\n");
 	}*/
 	switch(commands.at(commandpos)){
 		case CMD_NOP:
@@ -237,21 +242,19 @@ void Script::executeCommand(){
 			displayingtext = false;
 			break;
 		}
-		//nextCommand();
 		printf("CMD_SETTEXTBOXINVISIBLE\n");
 		break;
 		
 		case CMD_FACECURRENT:
 		var1 = getIntArg();
-		waitForEntity(entitynum);
 		entities.at(entitynum).setFacingDir((dir) var1);
-		//nextCommand();
+		//waitForEntity(entitynum);
 		break;
 		
 		case CMD_MOVECURRENT:
 		var1 = getIntArg();
-		waitForEntity(entitynum);
 		entities.at(entitynum).move((dir) var1);
+		waitForEntity(entitynum);
 		break;
 		
 		case CMD_WAITFORENTITY:
@@ -311,15 +314,15 @@ void Script::executeCommand(){
 		case CMD_FACE:
 		var1 = getIntArg();
 		var2 = getIntArg();
-		waitForEntity(var1);
 		entities.at(var1).setFacingDir((dir) var2);
+		//waitForEntity(var1);
 		break;
 		
 		case CMD_MOVE:
 		var1 = getIntArg();
 		var2 = getIntArg();
-		waitForEntity(var1);
 		entities.at(var1).move((dir) var2);
+		waitForEntity(var1);
 		break;
 		
 		case CMD_ADD:
@@ -334,6 +337,20 @@ void Script::executeCommand(){
 		var2 = getIntArg();
 		var3 = getIntArg();
 		heap[var1] = heap[var2] - heap[var3];
+		break;
+		
+		case CMD_MOVEMULTIPLE:
+		var1 = getIntArg();
+		var2 = getIntArg();
+		var3 = getIntArg();
+		//waiting = true;
+		for(int i = 0; i < var3; i++){
+			printf("wait %d\n", i);
+			//entities.at(var1).setBusy();
+			entities.at(var1).move((dir) var2);
+			waitForEntity(var1);
+		}
+		//waiting = false;
 		break;
 		
 		case CMD_CHOOSE:

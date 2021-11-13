@@ -57,7 +57,7 @@ bool clickaction = false;
 //bool caninteract;
 //bool canmove;
 
-Script *currentscript = NULL;
+//Script *currentscript = NULL;
 
 int currentlayer = 0;
 int currenttile = 0;
@@ -133,60 +133,7 @@ void quit(){
 		printf("%d, %d\n", ww, hh);
 	}
 	SDL_FreeSurface(tempsurface);
-}*/
-
-void createScript(int u){
-	currentscript = new Script(u, entities.at(u).getScript());
-	//currentscript->executeCommand();
-	/*std::ifstream scriptfile;
-	std::string line;
-	scriptfile.open(script.c_str());
-	if(!scriptfile.is_open()){
-		printf("Failed to open script file \"%s\".\n", script.c_str());
-	} else {
-		std::vector<command> commands;
-		std::vector<std::string> arguments;
-		command tempcommand = CMD_NOP;
-		while(tempcommand != CMD_ENDSCRIPT){
-			getline(scriptfile, line);
-			tempcommand = (command) std::stoi(line);
-			commands.push_back(tempcommand);
-			if(tempcommand == CMD_DISPLAYTEXT || tempcommand == CMD_NPCFACEPLAYER){
-				getline(scriptfile, line);
-				arguments.push_back(line);
-			}
-		}
-		scriptfile.close();
-		int argumentpos = 0;
-		for(int i = 0; i < commands.size(); i++){
-			switch(commands.at(i)){
-				case CMD_DISPLAYTEXT:
-				maintextbox->setVisible(true);
-				maintextbox->setText(arguments.at(argumentpos));
-				argumentpos++;
-				break;
-				
-				case CMD_DISABLEMOVE:
-				canmove = false;
-				caninteract = false;
-				break;
-				
-				case CMD_ENABLEMOVE:
-				canmove = true;
-				caninteract = true;
-				break;
-				
-				case CMD_NPCFACEPLAYER:
-				int u = std::stoi(arguments.at(argumentpos));
-				argumentpos++;
-				entities.at(u).setFacingDir(oppositeDir(entities.at(0).getFacingDir()));
-				break;
-			}
-		}
-		commands.clear();
-		arguments.clear();
-	}*/
-}		
+}*/		
 
 void switchLayer(){
 	int temp;
@@ -388,30 +335,20 @@ void renderEntities(std::vector<Entity> *entities, SpriteSheet *spritesheet, int
 	}
 }
 
-/*void renderTextBox(TextBox *t){
-	t->render(renderer);
-}
-
-void renderText(SDL_Rect *srcrect, SDL_Rect *dstrect){
-	SDL_RenderCopy(renderer, letterA, srcrect, dstrect);
-}*/
-
 void buttonAction(){
 	if(caninteract){
-		printf("1\n");
+		//printf("1\n");
 		caninteract = false;
 		int *facingpos = entities.at(0).getAdjacentTile(entities.at(0).getFacingDir(), map);
 		int u = getInteractableEntityAtPosition(facingpos[0], facingpos[1]);
 		delete facingpos;
 		if(u != -1){
-			if(entities.at(u).getType() == ENTTYPE_NPC){
-				createScript(u);
-				//dir direction = oppositeDir(entities.at(0).getFacingDir());
-				//entities.at(u).setFacingDir(direction);
+			if(entities.at(u).getType() < ENTTYPE_SCRIPT){
+				currentscript = new Script(u, entities.at(u).getScript());
 			}
 		}
 	} else {
-		printf("2\n");
+		//printf("2\n");
 		if(currentscript != NULL){
 			currentscript->advance();
 		}
@@ -643,28 +580,6 @@ Uint32 renderFunc(Uint32 interval, void *param){
 		}
 		pkey = false;
 	}
-	/*if(sckey){
-		if(caninteract){
-			int *facingpos = entities.at(0).getAdjacentTile(entities.at(0).getFacingDir(), map);
-			int u = getInteractableEntityAtPosition(facingpos[0], facingpos[1]);
-			delete facingpos;
-			if(u != -1){
-				if(entities.at(u).getType() == ENTTYPE_NPC){
-					createScript(u);
-					//dir direction = oppositeDir(entities.at(0).getFacingDir());
-					//entities.at(u).setFacingDir(direction);
-				}
-			}
-			caninteract = false;
-		} else {
-			if(currentscript != NULL){
-				currentscript->advance();
-				printf("h\n");
-			}
-			caninteract = true;
-		}
-		sckey = false;
-	}*/
 	if(entities.at(0).getMoveTimer() == 0 && canmove){
 		if(akey && !dkey && !wkey && !skey){
 			entities.at(0).move(DIR_LEFT);//, map, &entities);
@@ -687,13 +602,9 @@ Uint32 renderFunc(Uint32 interval, void *param){
 		}
 	}*/
 	if(camerafollowplayer){
-		//printf("cfp\n");
 		camposx = entities.at(0).getSpriteXPos() - 92;
 		camposy = entities.at(0).getSpriteYPos() - 67;
 	}
-	/*if(currentscript != NULL){
-		currentscript->asyncRun();
-	}*/
 	visibleTiles(visrange, camposx, camposy);
 	SDL_RenderClear(renderer);
 	renderMap(map, tileset, basic, visrange, &srcrectsubtiles, &dstrectsubtiles);
@@ -707,9 +618,6 @@ Uint32 renderFunc(Uint32 interval, void *param){
 	if(maintextbox->isActive()){
 		maintextbox->tick();
 	}
-	/*if(currentscript != NULL){
-		currentscript->tick();
-	}*/
 	SDL_RenderPresent(renderer);
 	return interval;
 }
@@ -756,10 +664,10 @@ void init(int loadfromfile, int mapw, int maph, std::string fname){
 	caninteract = true;
 	canmove = true;
 	Entity *en;
-	en = new Entity(ENTTYPE_PLAYER, 9, 5, 4, true, true, true, true, DIR_DOWN, "");
+	en = new Entity(ENTTYPE_PLAYER, 9, 5, 4, true, true, true, true, DIR_DOWN, "", 0);
 	entities.push_back(*en);
-	en = new Entity(ENTTYPE_NPC, 12, 10, 7, true, true, true, true, DIR_DOWN, "aaab");
-	entities.push_back(*en);
+	//en = new Entity(ENTTYPE_NPC, 12, 10, 7, true, true, true, true, DIR_DOWN, "aaab");
+	//entities.push_back(*en);
 	srcrecttiles.x = 0;
 	srcrecttiles.y = 0;
 	srcrecttiles.w = tilesize;
@@ -809,21 +717,13 @@ void init(int loadfromfile, int mapw, int maph, std::string fname){
 		tileset = new TileSet(tilesetname);
 		map = new Map(mapname);
 	}
+	currentscript = NULL;
 	visrange = new int[4];
 	maintextbox = new TextBox(4, 99, 192, 40, textboxtexture, font, renderer);//23x2 character display
-	/*white.r = 255;
-	white.g = 255;
-	white.b = 255;
-	white.a = 255;
-	font = TTF_OpenFont("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf", 28);
-	if(font == NULL){
-		printf("Failed to load font.\n");
-	}*/
-	//createCharTex("A", white);
 	heap = new uint8_t[256];
 	SDL_TimerID timer1 = SDL_AddTimer(16, renderFunc, NULL);
-	//SDL_TimerID timer2 = SDL_AddTimer(0, scriptFunc, NULL);
 	scriptthread = SDL_CreateThread(scriptThread, "scriptThread", (void*) NULL);
+	SDL_DetachThread(scriptthread);
 }
 
 int main(int argc, char **argv){
@@ -862,13 +762,6 @@ int main(int argc, char **argv){
 	init(loadfromfile, mapw, maph, fname);
 	while(active){
 		usleep(16666);
-		/*if(currentscript == NULL){
-			usleep(16666);
-		} else {
-			currentscript->run();
-			delete currentscript;
-			currentscript = NULL;
-		}*/
 	}
 	quit();
 	return 0;

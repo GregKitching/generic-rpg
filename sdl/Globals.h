@@ -25,5 +25,6 @@ extern bool caninteract;
 extern bool canmove;
 //extern SDL_Texture textboxtexture;
 extern SpriteSheet *font;
+extern Script *currentscript;
 
 #endif

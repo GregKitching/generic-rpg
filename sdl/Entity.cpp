@@ -15,8 +15,9 @@ Map *map;
 bool caninteract;
 bool canmove;
 SpriteSheet *font;
+Script *currentscript;
 
-Entity::Entity(enttype t, int x, int y, int s, bool a, bool r, bool sl, bool i, dir d, std::string sc){
+Entity::Entity(enttype t, int x, int y, int s, bool a, bool r, bool sl, bool i, dir d, std::string sc, int e){
 	type = t;
 	xpos = x;
 	ypos = y;
@@ -29,10 +30,12 @@ Entity::Entity(enttype t, int x, int y, int s, bool a, bool r, bool sl, bool i, 
 	interactable = i;
 	facing = d;
 	script = sc;
+	entnum = e;
 	walkcycle = 0;
 	movedir = DIR_DOWN;
 	movetimer = 0;
 	oddwalkcycle = false;
+	busy = false;
 	currentmovper = MOVEMENT_WALKABLE;
 	state = ENTSTATE_NONE;
 }
@@ -118,6 +121,7 @@ void Entity::move(dir direction){//, Map *map, std::vector<Entity> *entities){
 	movedir = direction;
 	facing = direction;
 	if(canMove(newpos[0], newpos[1], direction)){//, map, entities)){
+		busy = true;
 		state = ENTSTATE_MOVING;
 		xpos = newpos[0];
 		ypos = newpos[1];
@@ -156,6 +160,16 @@ void Entity::animateMove(){
 	} else if (movetimer == 0){
 		oddwalkcycle = !oddwalkcycle;
 		state = ENTSTATE_NONE;
+		busy = false;
+		if(entnum == 0){
+			enttype en = ENTTYPE_PLAYER;
+			for(int i = 1; i < entities.size(); i++){
+				if(entities.at(i).getXPos() == xpos && entities.at(i).getYPos() == ypos && entities.at(i).getType() > ENTTYPE_SIGN && i <= entities.size()){
+					currentscript = new Script(i, entities.at(i).getScript());
+					break;
+				}
+			}
+		}		
 	}
 }
 
@@ -237,4 +251,12 @@ void Entity::tick(){
 
 entstate Entity::getState(){
 	return state;
+}
+
+bool Entity::isBusy(){
+	return busy;
+}
+
+void Entity::setBusy(){
+	busy = true;
 }

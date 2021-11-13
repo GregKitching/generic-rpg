@@ -1,0 +1,7 @@
+halt
+faceplayer
+settextboxvisible(0)
+display(aaac)
+settextboxinvisible(0)
+unhalt
+return

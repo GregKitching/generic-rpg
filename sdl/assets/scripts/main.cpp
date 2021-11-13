@@ -31,6 +31,7 @@ std::regex fac("face\\([0-9]+,(up|down|left|right)\\)");
 std::regex mov("move\\([0-9]+,(up|down|left|right)\\)");
 std::regex add("add\\([0-9]+,[0-9]+,[0-9]+\\)");
 std::regex subcmd("subtract\\([0-9]+,[0-9]+,[0-9]+\\)");
+std::regex mvm("movemultiple\\([0-9]+,(up|down|left|right),[0-9]+\\)");
 std::regex chs("choose\\([0-9]+,[0-9]+,[a-z]{4}\\)");
 
 std::regex wt("%wt");
@@ -235,8 +236,14 @@ int main(int argc, char **argv){
 			bin.push_back(stoi(u[0]));
 			bin.push_back(stoi(u[1]));
 			bin.push_back(stoi(u[2]));
-		} else if (regex_match(line, s, chs)){
+		} else if (regex_match(line, s, mvm)){
 			bin.push_back(24);
+			threeArgs(u, line);
+			bin.push_back(stoi(u[0]));
+			bin.push_back(dirVal(u[1], &s));
+			bin.push_back(stoi(u[2]));
+		} else if (regex_match(line, s, chs)){
+			bin.push_back(25);
 			threeArgs(u, line);
 			charval(u2, u[2]);
 			bin.push_back(stoi(u[0]));

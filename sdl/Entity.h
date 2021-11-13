@@ -4,6 +4,7 @@
 class Entity{
 	private:
 		enttype type;
+		int entnum;
 		int xpos;//In terms of 16x16 tiles
 		int ypos;
 		int spritexpos;//In terms of pixels
@@ -24,7 +25,7 @@ class Entity{
 		std::string script;
 		bool canMove(int newx, int newy, dir direction);//, Map *map, std::vector<Entity> *entities);
 	public:
-		Entity(enttype t, int x, int y, int s, bool a, bool r, bool sl, bool i, dir d, std::string sc);
+		Entity(enttype t, int x, int y, int s, bool a, bool r, bool sl, bool i, dir d, std::string sc, int e);
 		void setLocation(int x, int y);
 		enttype getType();
 		int getXPos();
@@ -45,6 +46,8 @@ class Entity{
 		std::string getScript();
 		void tick();
 		entstate getState();
+		bool isBusy();
+		void setBusy();
 };
 
 #endif

@@ -73,8 +73,11 @@ Increments var by num
 decrement(var, num)
 Decrements var by num
 
-face(num entity, num direction)
+face(num entity, dir direction)
 Makes entity face direction
+
+move(num entity, dir direction)
+Makes entity move one tile in direction
 
 
 
@@ -85,6 +88,8 @@ var 1 = var 2 + var 3
 
 subtract(var 1, var 2, var 3)
 var 1 = var 2 - var 3
+
+movemultiple(num entity, dir direction, num times)
 
 
 

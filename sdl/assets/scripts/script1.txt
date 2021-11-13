@@ -1,0 +1,11 @@
+halt
+face(2, right)
+move2(2, right, 3)
+settextboxvisible(0)
+display(aaab)
+settextboxinvisible(0)
+face(2, left)
+move2(2, left, 3)
+face(2, right)
+unhalt
+return

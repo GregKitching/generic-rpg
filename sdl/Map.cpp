@@ -2,11 +2,14 @@
 #include <string>
 #include <iostream>
 #include <fstream>
+#include <vector>
 
 #include "constants.h"
 #include "enums.h"
+#include "Globals.h"
 #include "Tile.h"
 #include "TileSet.h"
+#include "Entity.h"
 #include "Map.h"
 
 Map::Map(int w, int h){
@@ -60,6 +63,41 @@ Map::Map(std::string filename){
 			tiles[i] = std::stoi(line);
 			getline(mapfile, line);
 			movementpermissions[i] = (movper) std::stoi(line);
+		}
+		getline(mapfile, line);
+		Entity *e;
+		int entnum = std::stoi(line);
+		enttype t;
+		int x;
+		int y;
+		int s;
+		bool a;
+		bool r;
+		bool sl;
+		bool i;
+		dir d;
+		for(int j = 0; j < entnum; j++){
+			getline(mapfile, line);
+			t = (enttype) std::stoi(line);
+			getline(mapfile, line);
+			x = std::stoi(line);
+			getline(mapfile, line);
+			y = std::stoi(line);
+			getline(mapfile, line);
+			s = std::stoi(line);
+			getline(mapfile, line);
+			a = (bool) std::stoi(line);
+			getline(mapfile, line);
+			r = (bool) std::stoi(line);
+			getline(mapfile, line);
+			sl = (bool) std::stoi(line);
+			getline(mapfile, line);
+			i = (bool) std::stoi(line);
+			getline(mapfile, line);
+			d = (dir) std::stoi(line);
+			getline(mapfile, line);
+			e = new Entity(t, x, y, s, a, r, sl, i, d, line, j + 1);
+			entities.push_back(*e);
 		}
 	}
 	mapfile.close();

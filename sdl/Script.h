@@ -20,6 +20,7 @@ class Script{
 		bool waitfortimer;
 		bool scriptend;
 		bool nextcommand;
+		bool waiting;
 		dir oppositeDir(dir direction);
 		int getIntArg();
 		std::string getStringArg();

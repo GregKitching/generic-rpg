@@ -1,3 +1,0 @@
-%pr0 told %pr1 %pr2 thing is %pr3.
-Blah
-Blah
