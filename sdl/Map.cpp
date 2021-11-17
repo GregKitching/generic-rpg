@@ -42,7 +42,8 @@ Map::Map(int w, int h, int tilesetlength){
 	}
 }
 
-Map::Map(std::string filename){
+Map::Map(std::string f, int warpnum, dir direction){
+	std::string filename = "assets/maps/" + f + ".txt";
 	std::ifstream mapfile;
 	std::string line;
 	mapfile.open(filename.c_str());
@@ -76,6 +77,7 @@ Map::Map(std::string filename){
 		bool sl;
 		bool i;
 		dir d;
+		int w = 0;
 		for(int j = 0; j < entnum; j++){
 			getline(mapfile, line);
 			t = (enttype) std::stoi(line);
@@ -97,10 +99,24 @@ Map::Map(std::string filename){
 			d = (dir) std::stoi(line);
 			getline(mapfile, line);
 			e = new Entity(t, x, y, s, a, r, sl, i, d, line, j + 1);
+			if(t == ENTTYPE_WARP){
+				e->setWarpNum(w);
+				w++;
+			}
 			entities.push_back(*e);
 		}
 	}
 	mapfile.close();
+	int *u = new int[2];
+	getWarpPos(u, warpnum);
+	entities.at(0).setLocation(u[0], u[1]);
+	delete u;
+	entities.at(0).setFacingDir(direction);
+}
+
+Map::~Map(){
+	delete [] tiles;
+	delete [] movementpermissions;
 }
 
 int Map::getWidth(){
@@ -167,7 +183,7 @@ void Map::setMovementPermission(int mouseposx, int mouseposy, int camposx, int c
 	if(tilepos[0] >= 0 && tilepos[0] < width && tilepos[1] >= 0 && tilepos[1] < height){
 		int tilenum = tilepos[0] + (tilepos[1] * width);
 		movementpermissions[tilenum] = currentmovper;
-		printf("a\n");
+		//printf("a\n");
 	}
 }
 
@@ -179,7 +195,8 @@ void Map::changeTile(int mouseposx, int mouseposy, int camposx, int camposy, int
 	}
 }
 
-void Map::save(std::string filename){
+void Map::save(std::string f){
+	std::string filename = "assets/maps/" + f + ".txt";
 	std::ofstream mapfile;
 	mapfile.open(filename.c_str());
 	if(!mapfile.is_open()){
@@ -200,4 +217,21 @@ void Map::save(std::string filename){
 		printf("Map saved as %s\n", filename.c_str());
 	}
 	mapfile.close();
+}
+
+void Map::getWarpPos(int *u, int warpnum){
+	int j = 0;
+	//int *u = new int[2];
+	Entity *e = NULL;
+	for(int i = 1; i < entities.size(); i++){
+		if(entities.at(i).getType() == ENTTYPE_WARP){
+			if(j == warpnum){
+				e = &entities.at(i);
+				break;
+			}
+			j++;
+		}
+	}
+	u[0] = e->getXPos();
+	u[1] = e->getYPos();
 }

@@ -18,6 +18,9 @@ Makes the entity the player is currently interacting with face the player
 waitforcurrententity
 waits until the current entity is finished moving before continuing
 
+deletetextbox
+deletes the text box on the top of the stack and returns control to the text box below it, or the player if there isn't one
+
 
 
 1 int
@@ -29,11 +32,8 @@ Meant to be followed by JMP instructions
 wait(num)
 Wait
 
-settextboxvisible(num)
-Sets text box #num to visible
-
-settextboxinvisible(num)
-Sets text box #num to invisible
+createtextbox(num)
+Creates text box of type num
 
 facecurrent(num direction)
 Makes the entity the player is currently interacting with face direction
@@ -97,3 +97,6 @@ movemultiple(num entity, dir direction, num times)
 
 choose(var, num, text)
 Gives the player num choices in text box 1, numbered 0 to num - 1, and stores their choice in var
+
+warp(num warpnum, dir direction, map)
+warps the player to map map, warp number warpnum, facing dir

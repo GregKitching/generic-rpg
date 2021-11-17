@@ -9,9 +9,10 @@
 #include "enums.h"
 #include "ScriptDefs.h"
 #include "Script.h"
+#include "TextBox.h"
 
 extern uint8_t *heap;
-extern TextBox *maintextbox;
+//extern TextBox *maintextbox;
 extern std::vector<Entity> entities;
 extern Map *map;
 extern bool caninteract;
@@ -85,10 +86,10 @@ Script::Script(int a, std::string filename){
 		for(int i = 0; i < commands.size(); i++){
 			//printf("%d\n", (int) commands.at(i));
 		}
-		printf("\n");
-		for(int i = 0; i < arguments.size(); i++){
+		//printf("\n");
+		/*for(int i = 0; i < arguments.size(); i++){
 			//printf("%d\n", (int) arguments.at(i));
-		}
+		}*/
 		//printf("c %lu\n", commands.size());
 		entitynum = a;
 		scriptfile.close();
@@ -161,7 +162,6 @@ std::string Script::getStringArg(){
 void Script::waitForEntity(int ent){
 	while(entities.at(ent).isBusy()){
 		//usleep(16666);
-		//printf("waitforentity2\n");
 	}
 }
 
@@ -186,7 +186,7 @@ void Script::executeCommand(){
 		break;
 		
 		case CMD_HALT:
-		printf("halt\n");
+		//printf("halt\n");
 		caninteract = false;
 		canmove = false;
 		//waitforinput = true;
@@ -194,7 +194,7 @@ void Script::executeCommand(){
 		break;
 		
 		case CMD_UNHALT:
-		printf("unhalt\n");
+		//printf("unhalt\n");
 		caninteract = true;
 		canmove = true;
 		break;
@@ -211,6 +211,15 @@ void Script::executeCommand(){
 		waitForEntity(entitynum);
 		break;
 		
+		case CMD_DESTROYTEXTBOX:
+		if(textboxes.size() > 0){
+			delete textboxes.at(textboxes.size() - 1);
+			textboxes.pop_back();
+		} else {
+			printf("The text box stack is already empty.\n");
+		}
+		break;
+		
 		case CMD_BRANCH:
 		commandpos += getIntArg();
 		//nextCommand();
@@ -221,29 +230,21 @@ void Script::executeCommand(){
 		waittimer = getIntArg();
 		break;
 		
-		case CMD_SETTEXTBOXVISIBLE:
+		case CMD_CREATETEXTBOX:
 		var1 = getIntArg();
 		switch(var1){
 			case 0:
-			maintextbox->setVisible(true);
-			intextbox = true;
+			textboxes.push_back(new TextBox(4, 99, 23, 2));
+			break;
+			
+			case 1:
+			textboxes.push_back(new TextBox(4, 99, 23, 2));
 			break;
 		}
+		break;
 		//nextCommand();
-		printf("CMD_SETTEXTBOXVISIBLE\n");
-		break;
-		
-		case CMD_SETTEXTBOXINVISIBLE:
-		var1 = getIntArg();
-		switch(var1){
-			case 0:
-			maintextbox->setVisible(false);
-			intextbox = false;
-			displayingtext = false;
-			break;
-		}
-		printf("CMD_SETTEXTBOXINVISIBLE\n");
-		break;
+		//printf("CMD_SETTEXTBOXVISIBLE\n");
+		//break;
 		
 		case CMD_FACECURRENT:
 		var1 = getIntArg();
@@ -273,15 +274,17 @@ void Script::executeCommand(){
 		break;
 		
 		case CMD_DISPLAY:
-		printf("CMD_DISPLAY\n");
+		//printf("CMD_DISPLAY\n");
+		//printf("%ld\n", textboxes.size());
 		path = getStringArg();
-		//printf("UUUU %s\n", path.c_str());
-		printf("e\n");
-		maintextbox->reset();
-		printf("f\n");
-		maintextbox->loadFile(path);
-		displayingtext = true;
-		printf("g\n");
+		if(textboxes.size() > 0){
+			textboxes.at(textboxes.size() - 1)->reset();
+			textboxes.at(textboxes.size() - 1)->loadFile(path);
+		} else {
+			printf("No text box to display to.\n");
+		}
+		//displayingtext = true;
+		//printf("g\n");
 		//intextbox = true;
 		//waitforinput = true;
 		break;
@@ -345,7 +348,6 @@ void Script::executeCommand(){
 		var3 = getIntArg();
 		//waiting = true;
 		for(int i = 0; i < var3; i++){
-			printf("wait %d\n", i);
 			//entities.at(var1).setBusy();
 			entities.at(var1).move((dir) var2);
 			waitForEntity(var1);
@@ -356,25 +358,41 @@ void Script::executeCommand(){
 		case CMD_CHOOSE:
 		//???
 		break;
+		
+		case CMD_WARP:
+		var1 = getIntArg();
+		var2 = getIntArg();
+		path = getStringArg();
+		renderflag = false;
+		while(rendering){//Wait for rendering thread to stop rendering
+			usleep(16666);
+		}
+		delete map;
+		entities.erase(entities.begin() + 1, entities.end());
+		map = new Map(path, var1, (dir) var2);
+		renderflag = true;
 	}
 	commandpos++;
 	//return u;
 }
 
 void Script::advance(){
-	if(maintextbox->getWaitForInput()){
-		maintextbox->input();
-		printf("advance\n");
+	if(textboxes.size() > 0){
+		if(textboxes.at(textboxes.size() - 1)->getWaitForInput()){
+			textboxes.at(textboxes.size() - 1)->input();
+			//printf("advance\n");
+		}
 	}	
 }
 
 void Script::run(){
 	//printf("a\n");
 	while(!scriptend){
-		if(displayingtext){
-			while(maintextbox->isActive()){
+		if(textboxes.size() > 0){
+			while(textboxes.at(textboxes.size() - 1)->isActive()){
 				usleep(16666);
 			}
+			//printf("b\n");
 			displayingtext = false;
 		}
 		executeCommand();

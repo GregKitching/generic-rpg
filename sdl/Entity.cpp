@@ -1,21 +1,28 @@
 #include <stdio.h>
 #include <string>
 #include <vector>
+#include <SDL2/SDL.h>
 
 #include "constants.h"
 #include "Globals.h"
 #include "enums.h"
 #include "Map.h"
 #include "Entity.h"
+#include "TextBox.h"
 
 uint8_t *heap;
-TextBox *maintextbox;
+//TextBox *maintextbox;
 std::vector<Entity> entities;
 Map *map;
 bool caninteract;
 bool canmove;
 SpriteSheet *font;
 Script *currentscript;
+bool renderflag;
+bool rendering;
+SDL_Renderer *renderer;
+std::vector<TextBox*> textboxes;
+SDL_Texture *textboxtexture;
 
 Entity::Entity(enttype t, int x, int y, int s, bool a, bool r, bool sl, bool i, dir d, std::string sc, int e){
 	type = t;
@@ -43,6 +50,8 @@ Entity::Entity(enttype t, int x, int y, int s, bool a, bool r, bool sl, bool i, 
 void Entity::setLocation(int x, int y){
 	xpos = x;
 	ypos = y;
+	spritexpos = x * tilesize;
+	spriteypos = y * tilesize;
 }
 
 enttype Entity::getType(){
@@ -132,7 +141,7 @@ void Entity::move(dir direction){//, Map *map, std::vector<Entity> *entities){
 			walkcycle = 1;
 		}
 		movetimer = 16;
-		printf("%d\n", movetimer);
+		//printf("%d\n", movetimer);
 	}
 }
 
@@ -259,4 +268,12 @@ bool Entity::isBusy(){
 
 void Entity::setBusy(){
 	busy = true;
+}
+
+int Entity::getWarpNum(){
+	return warpnum;
+}
+
+void Entity::setWarpNum(int w){
+	warpnum = w;
 }

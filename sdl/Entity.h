@@ -11,6 +11,7 @@ class Entity{
 		int spriteypos;
 		int basesprite;
 		int walkcycle;
+		int warpnum;
 		dir facing;
 		dir movedir;
 		bool animated;
@@ -48,6 +49,8 @@ class Entity{
 		entstate getState();
 		bool isBusy();
 		void setBusy();
+		int getWarpNum();
+		void setWarpNum(int w);
 };
 
 #endif

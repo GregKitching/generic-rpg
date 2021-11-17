@@ -13,10 +13,10 @@ std::regex hlt("halt");
 std::regex uhl("unhalt");
 std::regex fcp("faceplayer");
 std::regex wce("waitforcurrententity");
+std::regex dtb("destroytextbox");
 std::regex bch("branch\\([0-9]+\\)");
 std::regex wai("wait\\([0-9]+\\)");
-std::regex stv("settextboxvisible\\([0-9]+\\)");
-std::regex sti("settextboxinvisible\\([0-9]+\\)");
+std::regex ctb("createtextbox\\([0-9]+\\)");
 std::regex fcc("facecurrent\\((up|down|left|right)\\)");
 std::regex mvc("movecurrent\\((up|down|left|right)\\)");
 std::regex wfe("waitforentity\\([0-9]+\\)");
@@ -33,6 +33,7 @@ std::regex add("add\\([0-9]+,[0-9]+,[0-9]+\\)");
 std::regex subcmd("subtract\\([0-9]+,[0-9]+,[0-9]+\\)");
 std::regex mvm("movemultiple\\([0-9]+,(up|down|left|right),[0-9]+\\)");
 std::regex chs("choose\\([0-9]+,[0-9]+,[a-z]{4}\\)");
+std::regex wrp("warp\\([0-9]+,(up|down|left|right),[a-z]{4}\\)");
 
 std::regex wt("%wt");
 std::regex newline("%nl");
@@ -142,19 +143,17 @@ int main(int argc, char **argv){
 			bin.push_back(4);
 		} else if (regex_match(line, s, wce)){
 			bin.push_back(5);
-		} else if (regex_match(line, s, bch)){
+		} else if (regex_match(line, s, dtb)){
 			bin.push_back(6);
-			oneArg(u, line);
-			bin.push_back(stoi(u[0]));
-		} else if (regex_match(line, s, wai)){
+		} else if (regex_match(line, s, bch)){
 			bin.push_back(7);
 			oneArg(u, line);
 			bin.push_back(stoi(u[0]));
-		} else if (regex_match(line, s, stv)){
+		} else if (regex_match(line, s, wai)){
 			bin.push_back(8);
 			oneArg(u, line);
 			bin.push_back(stoi(u[0]));
-		} else if (regex_match(line, s, sti)){
+		} else if (regex_match(line, s, ctb)){
 			bin.push_back(9);
 			oneArg(u, line);
 			bin.push_back(stoi(u[0]));
@@ -248,6 +247,16 @@ int main(int argc, char **argv){
 			charval(u2, u[2]);
 			bin.push_back(stoi(u[0]));
 			bin.push_back(stoi(u[1]));
+			bin.push_back(u2[0]);
+			bin.push_back(u2[1]);
+			bin.push_back(u2[2]);
+			bin.push_back(u2[3]);
+		} else if (regex_match(line, s, wrp)){
+			bin.push_back(26);
+			threeArgs(u, line);
+			charval(u2, u[2]);
+			bin.push_back(stoi(u[0]));
+			bin.push_back(dirVal(u[1], &s));
 			bin.push_back(u2[0]);
 			bin.push_back(u2[1]);
 			bin.push_back(u2[2]);

@@ -42,7 +42,7 @@ bool sckey = false;
 bool hidelayer1 = false;
 bool setmovementpermissions = false;
 
-bool camerafollowplayer = true;
+bool camerafollowplayer = false;
 
 int camposx;
 int camposy;
@@ -65,7 +65,7 @@ int currentsubtile = 0;
 movper currentmovper = MOVEMENT_WALKABLE;
 
 SDL_Window *window = NULL;
-SDL_Renderer *renderer = NULL;
+//SDL_Renderer *renderer = NULL;
 SDL_Texture *texture = NULL;
 SDL_Surface *surface = NULL;
 
@@ -77,7 +77,7 @@ SpriteSheet *characters;
 TileSet *tileset;
 //Map *map;
 //std::vector<Entity> entities;
-SDL_Texture *textboxtexture = NULL;
+//SDL_Texture *textboxtexture = NULL;
 SDL_Texture *letterA = NULL;
 
 int *visrange;
@@ -357,268 +357,300 @@ void buttonAction(){
 }
 
 Uint32 renderFunc(Uint32 interval, void *param){
-	SDL_PollEvent(&e);
-	if(e.type == SDL_QUIT){
-		active = false;
-	} else if(e.type == SDL_KEYDOWN){
-		if(e.key.repeat == 0){
-			switch(e.key.keysym.sym){
-				case SDLK_w:
-				wkey = true;
-				break;
-				
-				case SDLK_s:
-				skey = true;
-				break;
-				
-				case SDLK_a:
-				akey = true;
-				break;
-				
-				case SDLK_d:
-				dkey = true;
-				break;
-				
-				case SDLK_l:
-				lkey = true;
-				/*if(programmode == TILESET_EDITOR){
-					switchLayer();
-				}*/
-				break;
-				
-				case SDLK_SEMICOLON:
-				sckey = true;
-				buttonAction();
-				break;
-				
-				case SDLK_t:
-				if(programmode == MAP_EDITOR){
-					switchTile(tileset);
-				} else if (programmode == TILESET_EDITOR){
-					switchSubtile(basic);
-				}
-				break;
-				
-				case SDLK_n:
-				if(programmode == MAP_EDITOR){
-					map->save(mapname);
-				} else if (programmode == TILESET_EDITOR){
-					tileset->saveTileset(tilesetname);
-				}
-				break;
-				
-				case SDLK_o:
-				if(programmode == MAP_EDITOR){
-					setOutsideTile(map, tileset);
-				}
-				break;
-				
-				case SDLK_p:
-				pkey = true;
-				break;
-				
-				case SDLK_0:
-				if(programmode == MAP_EDITOR){
-					currentmovper = MOVEMENT_WALKABLE;
-					printf("Movement permission set to MOVEMENT_WALKABLE.\n");
-				} else if (programmode == TILESET_EDITOR){
-					currentlayer = 0;
-					printf("Now editing layer 0.\n");
-				}
-				break;
-				
-				case SDLK_1:
-				if(programmode == MAP_EDITOR){
-					currentmovper = MOVEMENT_BLOCKED;
-					printf("Movement permission set to MOVEMENT_BLOCKED.\n");
-				} else if (programmode == TILESET_EDITOR){
-					currentlayer = 1;
-					printf("Now editing layer 1.\n");
-				}
-				break;
-				
-				case SDLK_2:
-				if(programmode == MAP_EDITOR){
-					currentmovper = MOVEMENT_LAYER0;
-					printf("Movement permission set to MOVEMENT_LAYER0.\n");
-				}
-				break;
-				
-				case SDLK_3:
-				if(programmode == MAP_EDITOR){
-					currentmovper = MOVEMENT_LAYER1;
-					printf("Movement permission set to MOVEMENT_LAYER1.\n");
-				}
-				break;
-				
-				case SDLK_UP:
-				if(!upkey){
+	if(renderflag){
+		rendering = true;
+		SDL_PollEvent(&e);
+		if(e.type == SDL_QUIT){
+			active = false;
+		} else if(e.type == SDL_KEYDOWN){
+			if(e.key.repeat == 0){
+				switch(e.key.keysym.sym){
+					case SDLK_w:
+					wkey = true;
+					break;
+					
+					case SDLK_s:
+					skey = true;
+					break;
+					
+					case SDLK_a:
+					akey = true;
+					break;
+					
+					case SDLK_d:
+					dkey = true;
+					break;
+					
+					case SDLK_l:
+					lkey = true;
+					/*if(programmode == TILESET_EDITOR){
+						switchLayer();
+					}*/
+					break;
+					
+					case SDLK_SEMICOLON:
+					sckey = true;
+					buttonAction();
+					break;
+					
+					case SDLK_t:
 					if(programmode == MAP_EDITOR){
-						selectTile(DIR_UP, tileset);
+						switchTile(tileset);
 					} else if (programmode == TILESET_EDITOR){
-						selectSubtile(DIR_UP, basic);
+						switchSubtile(basic);
 					}
-					upkey = true;
-				}
-				break;
-				
-				case SDLK_DOWN:
-				if(!downkey){
+					break;
+					
+					case SDLK_n:
 					if(programmode == MAP_EDITOR){
-						selectTile(DIR_DOWN, tileset);
+						map->save(mapname);
 					} else if (programmode == TILESET_EDITOR){
-						selectSubtile(DIR_DOWN, basic);
+						tileset->saveTileset(tilesetname);
 					}
-					downkey = true;
-				}
-				break;
-				
-				case SDLK_LEFT:
-				if(!leftkey){
+					break;
+					
+					case SDLK_o:
 					if(programmode == MAP_EDITOR){
-						selectTile(DIR_LEFT, tileset);
-					} else if (programmode == TILESET_EDITOR){
-						selectSubtile(DIR_LEFT, basic);
+						setOutsideTile(map, tileset);
 					}
-					leftkey = true;
-				}
-				break;
-				
-				case SDLK_RIGHT:
-				if(!rightkey){
+					break;
+					
+					case SDLK_p:
+					pkey = true;
+					break;
+					
+					case SDLK_0:
 					if(programmode == MAP_EDITOR){
-						selectTile(DIR_RIGHT, tileset);
+						currentmovper = MOVEMENT_WALKABLE;
+						printf("Movement permission set to MOVEMENT_WALKABLE.\n");
 					} else if (programmode == TILESET_EDITOR){
-						selectSubtile(DIR_RIGHT, basic);
+						currentlayer = 0;
+						printf("Now editing layer 0.\n");
 					}
-					rightkey = true;
+					break;
+					
+					case SDLK_1:
+					if(programmode == MAP_EDITOR){
+						currentmovper = MOVEMENT_BLOCKED;
+						printf("Movement permission set to MOVEMENT_BLOCKED.\n");
+					} else if (programmode == TILESET_EDITOR){
+						currentlayer = 1;
+						printf("Now editing layer 1.\n");
+					}
+					break;
+					
+					case SDLK_2:
+					if(programmode == MAP_EDITOR){
+						currentmovper = MOVEMENT_LAYER0;
+						printf("Movement permission set to MOVEMENT_LAYER0.\n");
+					}
+					break;
+					
+					case SDLK_3:
+					if(programmode == MAP_EDITOR){
+						currentmovper = MOVEMENT_LAYER1;
+						printf("Movement permission set to MOVEMENT_LAYER1.\n");
+					}
+					break;
+					
+					case SDLK_UP:
+					if(!upkey){
+						if(programmode == MAP_EDITOR){
+							selectTile(DIR_UP, tileset);
+						} else if (programmode == TILESET_EDITOR){
+							selectSubtile(DIR_UP, basic);
+						}
+						upkey = true;
+					}
+					break;
+					
+					case SDLK_DOWN:
+					if(!downkey){
+						if(programmode == MAP_EDITOR){
+							selectTile(DIR_DOWN, tileset);
+						} else if (programmode == TILESET_EDITOR){
+							selectSubtile(DIR_DOWN, basic);
+						}
+						downkey = true;
+					}
+					break;
+					
+					case SDLK_LEFT:
+					if(!leftkey){
+						if(programmode == MAP_EDITOR){
+							selectTile(DIR_LEFT, tileset);
+						} else if (programmode == TILESET_EDITOR){
+							selectSubtile(DIR_LEFT, basic);
+						}
+						leftkey = true;
+					}
+					break;
+					
+					case SDLK_RIGHT:
+					if(!rightkey){
+						if(programmode == MAP_EDITOR){
+							selectTile(DIR_RIGHT, tileset);
+						} else if (programmode == TILESET_EDITOR){
+							selectSubtile(DIR_RIGHT, basic);
+						}
+						rightkey = true;
+					}
+					break;
+					
+					default:
+					break;
 				}
-				break;
-				
-				default:
-				break;
+			}
+		} else if(e.type == SDL_KEYUP){
+			if(e.key.repeat == 0){//Might be unnecessary
+				switch(e.key.keysym.sym){
+					case SDLK_w:
+					wkey = false;
+					break;
+					
+					case SDLK_s:
+					skey = false;
+					break;
+					
+					case SDLK_a:
+					akey = false;
+					break;
+					
+					case SDLK_d:
+					dkey = false;
+					break;
+					
+					case SDLK_p:
+					pkey = false;
+					break;
+					
+					case SDLK_l:
+					lkey = false;
+					break;
+					
+					case SDLK_SEMICOLON:
+					sckey = false;
+					//caninteract = true;
+					break;
+					
+					case SDLK_UP:
+					upkey = false;
+					break;
+					
+					case SDLK_DOWN:
+					downkey = false;
+					break;
+					
+					case SDLK_LEFT:
+					leftkey = false;
+					break;
+					
+					case SDLK_RIGHT:
+					rightkey = false;
+					break;
+					
+					default:
+					break;
+				}
+			}
+		} else if (e.type == SDL_MOUSEMOTION){
+			SDL_GetMouseState(&mouseposx, &mouseposy);
+			//printf("%d, %d\n", mouseposx, mouseposy);
+		} else if (e.type == SDL_MOUSEBUTTONDOWN){
+			clickaction = true;
+		} else if (e.type == SDL_MOUSEBUTTONUP){
+			clickaction = false;
+		}
+		if(clickaction){
+			if(programmode == MAP_EDITOR){
+				if(setmovementpermissions){
+					map->setMovementPermission(mouseposx, mouseposy, camposx, camposy, currentmovper);
+				} else {
+					map->changeTile(mouseposx, mouseposy, camposx, camposy, currenttile);
+				}
+			} else if (programmode == TILESET_EDITOR){
+				changeSubtile(map, tileset);
 			}
 		}
-	} else if(e.type == SDL_KEYUP){
-		if(e.key.repeat == 0){//Might be unnecessary
-			switch(e.key.keysym.sym){
-				case SDLK_w:
-				wkey = false;
-				break;
-				
-				case SDLK_s:
-				skey = false;
-				break;
-				
-				case SDLK_a:
-				akey = false;
-				break;
-				
-				case SDLK_d:
-				dkey = false;
-				break;
-				
-				case SDLK_p:
-				pkey = false;
-				break;
-				
-				case SDLK_l:
-				lkey = false;
-				break;
-				
-				case SDLK_SEMICOLON:
-				sckey = false;
-				//caninteract = true;
-				break;
-				
-				case SDLK_UP:
-				upkey = false;
-				break;
-				
-				case SDLK_DOWN:
-				downkey = false;
-				break;
-				
-				case SDLK_LEFT:
-				leftkey = false;
-				break;
-				
-				case SDLK_RIGHT:
-				rightkey = false;
-				break;
-				
-				default:
-				break;
-			}
-		}
-	} else if (e.type == SDL_MOUSEMOTION){
-		SDL_GetMouseState(&mouseposx, &mouseposy);
-		//printf("%d, %d\n", mouseposx, mouseposy);
-	} else if (e.type == SDL_MOUSEBUTTONDOWN){
-		clickaction = true;
-	} else if (e.type == SDL_MOUSEBUTTONUP){
-		clickaction = false;
-	}
-	if(clickaction){
-		if(programmode == MAP_EDITOR){
+		if(pkey){
 			if(setmovementpermissions){
-				map->setMovementPermission(mouseposx, mouseposy, camposx, camposy, currentmovper);
+				setmovementpermissions = false;
+				printf("Movement permissions are no longer being set.\n");
 			} else {
-				map->changeTile(mouseposx, mouseposy, camposx, camposy, currenttile);
+				setmovementpermissions = true;
+				printf("Movement permissions are being set.\n");
 			}
-		} else if (programmode == TILESET_EDITOR){
-			changeSubtile(map, tileset);
+			pkey = false;
 		}
-	}
-	if(pkey){
-		if(setmovementpermissions){
-			setmovementpermissions = false;
-			printf("Movement permissions are no longer being set.\n");
-		} else {
-			setmovementpermissions = true;
-			printf("Movement permissions are being set.\n");
+		switch(programmode){
+			case NORMAL_GAMEPLAY:
+			if(entities.at(0).getMoveTimer() == 0 && canmove){
+				if(akey && !dkey && !wkey && !skey){
+					entities.at(0).move(DIR_LEFT);//, map, &entities);
+				} else if (dkey && !akey && !wkey && !skey){
+					entities.at(0).move(DIR_RIGHT);//, map, &entities);
+				} else if (wkey && !skey){
+					entities.at(0).move(DIR_UP);//, map, &entities);
+				} else if (skey && !wkey){
+					entities.at(0).move(DIR_DOWN);//, map, &entities);
+				}
+			}
+			break;
+			
+			default:
+			if(akey && !dkey){// && !wkey && !skey){
+				camposx -= 2;
+			} else if (dkey && !akey){// && !wkey && !skey){
+				camposx += 2;
+			}
+			if (wkey && !skey){
+				camposy -= 2;
+			} else if (skey && !wkey){
+				camposy += 2;
+			}
+			break;
 		}
-		pkey = false;
-	}
-	if(entities.at(0).getMoveTimer() == 0 && canmove){
-		if(akey && !dkey && !wkey && !skey){
-			entities.at(0).move(DIR_LEFT);//, map, &entities);
-		} else if (dkey && !akey && !wkey && !skey){
-			entities.at(0).move(DIR_RIGHT);//, map, &entities);
-		} else if (wkey && !skey){
-			entities.at(0).move(DIR_UP);//, map, &entities);
-		} else if (skey && !wkey){
-			entities.at(0).move(DIR_DOWN);//, map, &entities);
+		for(int i = 0; i < entities.size(); i++){
+			if(entities.at(i).getMoveTimer() > 0){
+				entities.at(i).animateMove();
+			}
 		}
-	}
-	for(int i = 0; i < entities.size(); i++){
-		if(entities.at(i).getMoveTimer() > 0){
-			entities.at(i).animateMove();
+		/*for(int i = 0; i < entities.size(); i++){
+			if (entities.at(i).getMoveTimer() > 0){
+				entities.at(i).animate();
+			}
+		}*/
+		if(camerafollowplayer){
+			camposx = entities.at(0).getSpriteXPos() - 92;
+			camposy = entities.at(0).getSpriteYPos() - 67;
 		}
-	}
-	/*for(int i = 0; i < entities.size(); i++){
-		if (entities.at(i).getMoveTimer() > 0){
-			entities.at(i).animate();
+		visibleTiles(visrange, camposx, camposy);
+		SDL_RenderClear(renderer);
+		renderMap(map, tileset, basic, visrange, &srcrectsubtiles, &dstrectsubtiles);
+		if(programmode == NORMAL_GAMEPLAY){
+			renderEntities(&entities, characters, visrange, &srcrecttiles, &dstrecttiles);
 		}
-	}*/
-	if(camerafollowplayer){
-		camposx = entities.at(0).getSpriteXPos() - 92;
-		camposy = entities.at(0).getSpriteYPos() - 67;
+		/*if(maintextbox->getVisible()){
+			maintextbox->renderBox();
+			maintextbox->renderText();
+		}
+		if(maintextbox->isActive()){
+			maintextbox->tick();
+		}*/
+		for(int i = 0; i < textboxes.size(); i++){
+			if(textboxes.at(i)->isActive()){
+				textboxes.at(i)->renderBox();
+				textboxes.at(i)->renderText();
+				textboxes.at(i)->tick();
+			}/* else {
+				delete textboxes.at(i);
+				textboxes.pop_back();
+			}*/
+		}
+		SDL_RenderPresent(renderer);
+	} else {
+		rendering = false;
 	}
-	visibleTiles(visrange, camposx, camposy);
-	SDL_RenderClear(renderer);
-	renderMap(map, tileset, basic, visrange, &srcrectsubtiles, &dstrectsubtiles);
-	if(programmode == NORMAL_GAMEPLAY){
-		renderEntities(&entities, characters, visrange, &srcrecttiles, &dstrecttiles);
-	}
-	if(maintextbox->getVisible()){
-		maintextbox->renderBox();
-		maintextbox->renderText();
-	}
-	if(maintextbox->isActive()){
-		maintextbox->tick();
-	}
-	SDL_RenderPresent(renderer);
 	return interval;
 }
 
@@ -661,10 +693,13 @@ void init(int loadfromfile, int mapw, int maph, std::string fname){
 	/*if(TTF_Init() == -1){
 		printf("Could not initialize SDL_TTF.\n");
 	}*/
+	if(programmode == NORMAL_GAMEPLAY){
+		camerafollowplayer = true;
+	}
 	caninteract = true;
 	canmove = true;
 	Entity *en;
-	en = new Entity(ENTTYPE_PLAYER, 9, 5, 4, true, true, true, true, DIR_DOWN, "", 0);
+	en = new Entity(ENTTYPE_PLAYER, 0, 0, 4, true, true, true, true, DIR_DOWN, "", 0);
 	entities.push_back(*en);
 	//en = new Entity(ENTTYPE_NPC, 12, 10, 7, true, true, true, true, DIR_DOWN, "aaab");
 	//entities.push_back(*en);
@@ -703,7 +738,7 @@ void init(int loadfromfile, int mapw, int maph, std::string fname){
 		if(loadfromfile == 0){
 			map = new Map(mapw, maph);
 		} else {
-			map = new Map(mapname);
+			map = new Map(mapname, 0, DIR_DOWN);
 		}
 	} else if (programmode == TILESET_EDITOR){
 		if(loadfromfile == 0){
@@ -715,12 +750,14 @@ void init(int loadfromfile, int mapw, int maph, std::string fname){
 		}
 	} else {
 		tileset = new TileSet(tilesetname);
-		map = new Map(mapname);
+		map = new Map(mapname, 0, DIR_DOWN);
 	}
 	currentscript = NULL;
 	visrange = new int[4];
-	maintextbox = new TextBox(4, 99, 192, 40, textboxtexture, font, renderer);//23x2 character display
+	//maintextbox = new TextBox(4, 99, 23, 2, textboxtexture, font);//, renderer);//23x2 character display
 	heap = new uint8_t[256];
+	renderflag = true;
+	rendering = true;
 	SDL_TimerID timer1 = SDL_AddTimer(16, renderFunc, NULL);
 	scriptthread = SDL_CreateThread(scriptThread, "scriptThread", (void*) NULL);
 	SDL_DetachThread(scriptthread);
@@ -750,14 +787,14 @@ int main(int argc, char **argv){
 	fontspritesheetname = "assets/images/font.png";
 	textboxspritesheetname = "assets/images/textbox.png";
 	if(programmode == MAP_EDITOR){
-		tilesetname = "assets/tileset.txt";
+		tilesetname = "aaaa";
 		mapname = argv[5];
 	} else if (programmode == TILESET_EDITOR){
 		tilesetname = argv[5];
-		mapname = "assets/map.txt";
+		mapname = "aaaa";
 	} else {
-		tilesetname = "assets/tileset.txt";
-		mapname = "assets/map.txt";
+		tilesetname = "aaaa";
+		mapname = "aaaa";
 	}
 	init(loadfromfile, mapw, maph, fname);
 	while(active){

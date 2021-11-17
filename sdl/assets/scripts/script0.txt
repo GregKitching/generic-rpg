@@ -1,8 +1,8 @@
 halt
 faceplayer
-settextboxvisible(0)
+createtextbox(0)
 display(aaaa)
-settextboxinvisible(0)
+destroytextbox
 wait(20)
 movecurrent(up)
 move(1, right)

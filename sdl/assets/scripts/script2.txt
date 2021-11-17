@@ -1,7 +1,7 @@
 halt
 faceplayer
-settextboxvisible(0)
+createtextbox(0)
 display(aaac)
-settextboxinvisible(0)
+destroytextbox
 unhalt
 return

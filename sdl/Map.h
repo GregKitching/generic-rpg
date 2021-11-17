@@ -11,7 +11,8 @@ class Map{
 	public:
 		Map(int w, int h);
 		Map(int w, int h, int tilesetlength);
-		Map(std::string filaname);
+		Map(std::string f, int warpnum, dir direction);
+		~Map();
 		int getWidth();
 		int getHeight();
 		int getPixWidth();
@@ -24,7 +25,8 @@ class Map{
 		movper getMovementPermission(int x, int y);
 		void setMovementPermission(int mouseposx, int mouseposy, int camposx, int camposy, movper currentmovper);
 		void changeTile(int mouseposx, int mouseposy, int camposx, int camposy, int currenttile);
-		void save(std::string filename);
+		void save(std::string f);
+		void getWarpPos(int *u, int warpnum);
 };
 
 #endif

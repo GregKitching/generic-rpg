@@ -18,7 +18,7 @@
 #include "Script.h"
 
 extern uint8_t *heap;
-extern TextBox *maintextbox;
+//extern TextBox *maintextbox;
 extern std::vector<Entity> entities;
 extern Map *map;
 extern bool caninteract;
@@ -26,5 +26,10 @@ extern bool canmove;
 //extern SDL_Texture textboxtexture;
 extern SpriteSheet *font;
 extern Script *currentscript;
+extern bool renderflag;
+extern bool rendering;
+extern SDL_Renderer *renderer;
+extern std::vector<TextBox*> textboxes;
+extern SDL_Texture *textboxtexture;
 
 #endif

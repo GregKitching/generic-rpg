@@ -20,7 +20,8 @@ TileSet::TileSet(int u){
 	delete temp;
 }
 
-TileSet::TileSet(std::string filename){
+TileSet::TileSet(std::string f){
+	std::string filename = "assets/tilesets/" + f + ".txt";
 	std::ifstream tilesetfile;
 	std::string line;
 	tilesetfile.open(filename);
@@ -58,7 +59,8 @@ Tile* TileSet::getTileObject(int u){
 	return tiles[u];
 }
 
-void TileSet::saveTileset(std::string filename){
+void TileSet::saveTileset(std::string f){
+	std::string filename = "assets/tilesets/" + f + ".txt";
 	std::ofstream tilesetfile;
 	tilesetfile.open(filename.c_str());
 	if(!tilesetfile.is_open()){

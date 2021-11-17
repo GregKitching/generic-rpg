@@ -1,11 +1,12 @@
 halt
 face(2, right)
-move2(2, right, 3)
-settextboxvisible(0)
+movemultiple(2, right, 3)
+face(0, left)
+createtextbox(0)
 display(aaab)
-settextboxinvisible(0)
+destroytextbox
 face(2, left)
-move2(2, left, 3)
+movemultiple(2, left, 3)
 face(2, right)
 unhalt
 return
