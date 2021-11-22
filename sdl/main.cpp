@@ -62,7 +62,7 @@ bool clickaction = false;
 int currentlayer = 0;
 int currenttile = 0;
 int currentsubtile = 0;
-movper currentmovper = MOVEMENT_WALKABLE;
+movper currentmovper = MOVEMENT_DEFAULT;
 
 SDL_Window *window = NULL;
 //SDL_Renderer *renderer = NULL;
@@ -433,8 +433,8 @@ Uint32 renderFunc(Uint32 interval, void *param){
 					
 					case SDLK_0:
 					if(programmode == MAP_EDITOR){
-						currentmovper = MOVEMENT_WALKABLE;
-						printf("Movement permission set to MOVEMENT_WALKABLE.\n");
+						currentmovper = MOVEMENT_DEFAULT;
+						printf("Movement permission set to MOVEMENT_DEFAULT.\n");
 					} else if (programmode == TILESET_EDITOR){
 						currentlayer = 0;
 						printf("Now editing layer 0.\n");

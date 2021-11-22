@@ -21,7 +21,7 @@ Map::Map(int w, int h){
 	movementpermissions = new movper[mapsize];
 	for(int i = 0; i < mapsize; i++){
 		tiles[i] = 0;
-		movementpermissions[i] = MOVEMENT_WALKABLE;
+		movementpermissions[i] = MOVEMENT_DEFAULT;
 	}
 }
 
@@ -38,7 +38,7 @@ Map::Map(int w, int h, int tilesetlength){
 		} else {
 			tiles[i] = 0;
 		}
-		movementpermissions[i] = MOVEMENT_WALKABLE;
+		movementpermissions[i] = MOVEMENT_DEFAULT;
 	}
 }
 

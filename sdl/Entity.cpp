@@ -43,7 +43,7 @@ Entity::Entity(enttype t, int x, int y, int s, bool a, bool r, bool sl, bool i, 
 	movetimer = 0;
 	oddwalkcycle = false;
 	busy = false;
-	currentmovper = MOVEMENT_WALKABLE;
+	currentmovper = MOVEMENT_DEFAULT;
 	state = ENTSTATE_NONE;
 }
 
@@ -107,16 +107,16 @@ bool Entity::canMove(int newx, int newy, dir direction){//, Map *map, std::vecto
 		if(entities.at(i).getXPos() == newx && entities.at(i).getYPos() == newy && entities.at(i).isSolid()){
 			return false;
 		}
-		/*if(map->getMovementPermission(newx, newy) == MOVEMENT_WALKABLE){
+		/*if(map->getMovementPermission(newx, newy) == MOVEMENT_DEFAULT){
 			move2(newx, newy);
-			currentmovper = MOVEMENT_WALKABLE;
+			currentmovper = MOVEMENT_DEFAULT;
 		} else if (map->getMovementPermission(newx, newy) == MOVEMENT_LAYER0){
-			if(currentmovper == MOVEMENT_WALKABLE || currentmovper == MOVEMENT_LAYER0){
+			if(currentmovper == MOVEMENT_DEFAULT || currentmovper == MOVEMENT_LAYER0){
 				move2(newx, newy);
 				currentmovper = MOVEMENT_LAYER0;
 			}
 		} else if (map->getMovementPermission(newx, newy) == MOVEMENT_LAYER1){
-			if(currentmovper == MOVEMENT_WALKABLE || currentmovper == MOVEMENT_LAYER1){
+			if(currentmovper == MOVEMENT_DEFAULT || currentmovper == MOVEMENT_LAYER1){
 				move2(newx, newy);
 				currentmovper = MOVEMENT_LAYER1;
 			}
