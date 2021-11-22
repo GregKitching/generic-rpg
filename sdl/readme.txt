@@ -29,9 +29,8 @@ The main loop of the program spawns two other threads which handle specific task
 	scriptThread enters a while loop and executes commands from the currently active script independantly of rendering, calling
 	usleep() if the script must wait for an action to be performed or there is no currently active script.
 
-The structure of the program, including the way maps, entities and scripts work, were highly inspired by the the 3rd generation of
-Pokemon games by Game Freak, and the way in which that data was displayed to us outsiders by third-party rom editing tools such as
-AdvanceMap.
+The structure of the program, including the way maps, entities and scripts work, were inspired by the the 3rd generation of Pokemon
+games by Game Freak, and the way in which that data was displayed to us outsiders by third-party rom editing tools such as AdvanceMap.
 
 Map
 Maps are made up of an x by y grid of 16 by 16 pixel tiles, a movement permission for each tile, an "outside tile" to render in visible
