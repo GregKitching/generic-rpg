@@ -1,6 +1,6 @@
 Description of program arguments:
 
-./something <program mode> <load from file> <map width/tileset length> <map height> <file name>
+./main <program mode> <load from file> <map width/tileset length> <map height> <file name>
 
 
 <program mode>: 0 = normal gameplay, 1 = map editor, 2 = tileset editor
