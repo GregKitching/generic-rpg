@@ -1,0 +1,9 @@
+This is an example of
+a book. Books will
+contain a lot of text,
+so the player should
+not have to wait for
+the text to scroll and
+should be able to flip
+between pages at their
+lesiure.

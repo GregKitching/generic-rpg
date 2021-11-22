@@ -367,18 +367,30 @@ Uint32 renderFunc(Uint32 interval, void *param){
 				switch(e.key.keysym.sym){
 					case SDLK_w:
 					wkey = true;
+					if(currentscript != NULL){
+						currentscript->dirAction(DIR_UP);
+					}
 					break;
 					
 					case SDLK_s:
 					skey = true;
+					if(currentscript != NULL){
+						currentscript->dirAction(DIR_DOWN);
+					}
 					break;
 					
 					case SDLK_a:
 					akey = true;
+					if(currentscript != NULL){
+						currentscript->dirAction(DIR_LEFT);
+					}
 					break;
 					
 					case SDLK_d:
 					dkey = true;
+					if(currentscript != NULL){
+						currentscript->dirAction(DIR_RIGHT);
+					}
 					break;
 					
 					case SDLK_l:
@@ -637,15 +649,26 @@ Uint32 renderFunc(Uint32 interval, void *param){
 		if(maintextbox->isActive()){
 			maintextbox->tick();
 		}*/
-		for(int i = 0; i < textboxes.size(); i++){
-			if(textboxes.at(i)->isActive()){
+		if(textboxes.size() > 0){
+			for(int i = 0; i < textboxes.size(); i++){
 				textboxes.at(i)->renderBox();
 				textboxes.at(i)->renderText();
-				textboxes.at(i)->tick();
-			}/* else {
-				delete textboxes.at(i);
-				textboxes.pop_back();
-			}*/
+				/*if(textboxes.at(i)->isActive()){
+					
+				}/* else {
+					delete textboxes.at(i);
+					textboxes.pop_back();
+				}*/
+			}
+			if(textboxes.at(textboxes.size() - 1)->isActive()){
+				if(textboxes.at(textboxes.size() - 1)->hasChoice()){
+					textboxes.at(textboxes.size() - 1)->renderCursor();
+				} else if (textboxes.at(textboxes.size() - 1)->isBook()){
+					textboxes.at(textboxes.size() - 1)->renderPageArrows();
+				} else {
+					textboxes.at(textboxes.size() - 1)->tick();
+				}
+			}
 		}
 		SDL_RenderPresent(renderer);
 	} else {
@@ -655,13 +678,25 @@ Uint32 renderFunc(Uint32 interval, void *param){
 }
 
 int scriptThread(void *param){
+	std::string nextscript;
+	//bool u = false;
+	int entnum;
 	while(active){
 		if(currentscript == NULL){
 			usleep(16666);
 		} else {
-			currentscript->run();
-			delete currentscript;
-			currentscript = NULL;
+			do{
+				nextscript = currentscript->run();//To script loop
+				entnum = currentscript->getEntityNum();
+				delete currentscript;
+				if(nextscript.compare("") != 0){
+					currentscript = new Script(entnum, nextscript);
+					//u = true;
+				} else {
+					currentscript = NULL;
+					//u = false;
+				}
+			} while (currentscript != NULL);
 		}
 	}
 	return 0;

@@ -83,7 +83,7 @@ Script::Script(int a, std::string filename){
 				i++;
 			}
 		}
-		for(int i = 0; i < commands.size(); i++){
+		/*for(int i = 0; i < commands.size(); i++){
 			//printf("%d\n", (int) commands.at(i));
 		}
 		//printf("\n");
@@ -91,10 +91,11 @@ Script::Script(int a, std::string filename){
 			//printf("%d\n", (int) arguments.at(i));
 		}*/
 		//printf("c %lu\n", commands.size());
-		entitynum = a;
 		scriptfile.close();
+		entitynum = a;
 		commandpos = 0;
 		argumentpos = 0;
+		nextscript = "";
 		nextcommand = true;
 		intextbox = false;
 		displayingtext = false;
@@ -221,7 +222,9 @@ void Script::executeCommand(){
 		break;
 		
 		case CMD_BRANCH:
-		commandpos += getIntArg();
+		var1 = getIntArg();
+		commandpos += (int) heap[var1];
+		argumentpos += ((int) heap[var1]) * 4;
 		//nextCommand();
 		break;
 		
@@ -231,15 +234,32 @@ void Script::executeCommand(){
 		break;
 		
 		case CMD_CREATETEXTBOX:
-		var1 = getIntArg();
-		switch(var1){
-			case 0:
-			textboxes.push_back(new TextBox(4, 99, 23, 2));
-			break;
-			
-			case 1:
-			textboxes.push_back(new TextBox(4, 99, 23, 2));
-			break;
+		{
+			textboxtype t = (textboxtype) getIntArg();
+			switch(t){
+				case TEXTBOX_SPEECH:
+				textboxes.push_back(new TextBox(4, 99, 23, 2, false, false));
+				break;
+				
+				case TEXTBOX_YESNO:
+				textboxes.push_back(new TextBox(120, 59, 4, 2, true, false));
+				break;
+				
+				case TEXTBOX_MENU:
+				textboxes.push_back(new TextBox(4, 10, 23, 8, true, false));
+				break;
+				
+				case TEXTBOX_STORE:
+				textboxes.push_back(new TextBox(4, 10, 23, 8, true, false));
+				break;
+				
+				case TEXTBOX_BOOK:
+				textboxes.push_back(new TextBox(4, 10, 23, 8, false, true));
+				break;
+				
+				default:
+				break;
+			}
 		}
 		break;
 		//nextCommand();
@@ -263,9 +283,8 @@ void Script::executeCommand(){
 		break;
 		
 		case CMD_JUMP:
-		//somehow break out of this script
-		path = scriptpathfirst + getStringArg() + scriptpathlast;
-		//???
+		nextscript = getStringArg();
+		scriptend = true;
 		break;
 		
 		case CMD_JUMPSUBROUTINE:
@@ -379,13 +398,35 @@ void Script::executeCommand(){
 void Script::advance(){
 	if(textboxes.size() > 0){
 		if(textboxes.at(textboxes.size() - 1)->getWaitForInput()){
-			textboxes.at(textboxes.size() - 1)->input();
+			if(textboxes.at(textboxes.size() - 1)->hasChoice()){
+				heap[0] = textboxes.at(textboxes.size() - 1)->getChoice();
+			}
+			textboxes.at(textboxes.size() - 1)->advance();
 			//printf("advance\n");
 		}
 	}	
 }
 
-void Script::run(){
+void Script::dirAction(dir direction){
+	if(textboxes.size() > 0){
+		if(textboxes.at(textboxes.size() - 1)->hasChoice()){// || textboxes.at(textboxes.size() - 1)->isBook()){
+			if(direction == DIR_DOWN){
+				textboxes.at(textboxes.size() - 1)->next();
+			} else if (direction == DIR_UP){
+				textboxes.at(textboxes.size() - 1)->prev();
+			}
+		} else if (textboxes.at(textboxes.size() - 1)->isBook()){
+			if(direction == DIR_RIGHT){
+				textboxes.at(textboxes.size() - 1)->nextPage();
+			} else if (direction == DIR_LEFT){
+				textboxes.at(textboxes.size() - 1)->prevPage();
+			}
+		}
+	}
+}
+		
+
+std::string Script::run(){
 	//printf("a\n");
 	while(!scriptend){
 		if(textboxes.size() > 0){
@@ -397,8 +438,13 @@ void Script::run(){
 		}
 		executeCommand();
 	}
+	return nextscript;
 }
 
 bool Script::waitingForInput(){
 	return 0;//waitforinput;
+}
+
+int Script::getEntityNum(){
+	return entitynum;
 }

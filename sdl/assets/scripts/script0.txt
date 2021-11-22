@@ -2,6 +2,7 @@ halt
 faceplayer
 createtextbox(0)
 display(aaaa)
+display(aaad)
 destroytextbox
 wait(20)
 movecurrent(up)

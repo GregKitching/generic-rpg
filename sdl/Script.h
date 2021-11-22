@@ -8,6 +8,7 @@ class Script{
 		const std::string textpathfirst = "assets/text/";
 		const std::string textpathlast = ".txt";
 		std::string scriptname;
+		std::string nextscript;
 		std::vector<command> commands;
 		std::vector<char> arguments;
 		int entitynum;
@@ -30,8 +31,10 @@ class Script{
 		~Script();
 		void executeCommand();
 		void advance();
-		void run();
+		void dirAction(dir direction);
+		std::string run();
 		bool waitingForInput();
+		int getEntityNum();
 };
 
 #endif

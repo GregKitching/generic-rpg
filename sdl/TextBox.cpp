@@ -8,17 +8,33 @@
 #include "SpriteSheet.h"
 #include "TextBox.h"
 
-TextBox::TextBox(int x, int y, int w, int h){
+TextBox::TextBox(int x, int y, int w, int h, bool c, bool b){
 	xpos = x;
 	ypos = y;
 	width = w;
 	height = h;
-	pixwidth = (width * 8) + 8;
+	haschoice = c;
+	isbook = b;
+	if(haschoice){
+		xofs = 12;
+		linesshown = height - 1;
+		waitforinput = true;
+	} else if (isbook){
+		xofs = 4;
+		linesshown = height - 1;
+		waitforinput = true;
+	} else {
+		xofs = 4;
+		linesshown = 0;
+		waitforinput = false;
+	}
+	pixwidth = (width * 8) + xofs + 4;
 	pixheight = (height * 16) + 8;
 	visible = true;
 	active = false;
-	waitforinput = false;
 	fileloaded = false;
+	firstpage = true;
+	lastpage = false;
 	srcrect.x = 0;
 	srcrect.y = 0;
 	srcrect.w = 0;
@@ -29,7 +45,7 @@ TextBox::TextBox(int x, int y, int w, int h){
 	dstrect.h = 0;
 	timer = 2;
 	timerval = 2;
-	linesshown = 0;
+	cursorpos = 0;
 	scrollpos = 0;
 	charsshown = new int[height];
 	for(int i = 0; i < height; i++){
@@ -89,26 +105,41 @@ void TextBox::renderBox(){
 
 void TextBox::renderText(){
 	if(fileloaded){
-		SDL_Rect srcrect;
-		SDL_Rect dstrect;
-		srcrect.x = 0;
-		srcrect.y = 0;
-		srcrect.w = 8;
-		srcrect.h = 16;
-		dstrect.x = xpos + 4;
-		dstrect.y = ypos + 4;
-		dstrect.w = 8;
-		dstrect.h = 16;
+		setRect(&srcrect, 0, 0, 8, 16);
+		setRect(&dstrect, xpos + xofs, ypos + 4, 8, 16);
 		for(int i = 0; i < linesshown + 1; i++){
+			//printf("u\n");
 			for(int j = 0; j < charsshown[i]; j++){
+				//printf("%d\n", i);
 				srcrect.x = font->getSubtileX(lines.at(scrollpos + i)[j]);
+				//printf("b\n");
 				srcrect.y = (font->getSubtileY(lines.at(scrollpos + i)[j])) * 2;
+				//printf("c\n");
 				SDL_RenderCopy(renderer, font->getTexture(), &srcrect, &dstrect);
 				dstrect.x += 8;
 			}
-			dstrect.x = xpos + 4;
+			dstrect.x = xpos + xofs;
 			dstrect.y += 16;
 		}
+	}
+}
+
+void TextBox::renderCursor(){
+	setRect(&srcrect, 16, 0, 8, 8);
+	setRect(&dstrect, xpos + 4, ypos + 8 + (cursorpos * 16), 8, 8);
+	SDL_RenderCopy(renderer, textboxtexture, &srcrect, &dstrect);
+}
+
+void TextBox::renderPageArrows(){
+	if(firstpage & !lastpage){
+		setRect(&srcrect, 8, 0, 8, 8);
+		setRect(&dstrect, xpos + pixwidth - 16, ypos + pixheight - 8, 8, 8);
+		SDL_RenderCopy(renderer, textboxtexture, &srcrect, &dstrect);
+	}
+	if(lastpage & !firstpage){
+		setRect(&srcrect, 16, 0, 8, 8);
+		setRect(&dstrect, xpos + pixwidth - 8, ypos + pixheight - 8, 8, 8);
+		SDL_RenderCopy(renderer, textboxtexture, &srcrect, &dstrect);
 	}
 }
 
@@ -140,25 +171,111 @@ void TextBox::advanceText(){
 }
 
 void TextBox::advanceLine(){
+	scrollpos++;
 	for(int i = 0; i < height - 1; i++){
 		charsshown[i] = charsshown[i + 1];
 	}
-	charsshown[height - 1] = 0;
-	scrollpos++;
+	if(haschoice || isbook){
+		charsshown[height - 1] = linelength.at(scrollpos + height - 1);
+	} else {
+		charsshown[height - 1] = 0;
+	}	
+}
+
+void TextBox::prevLine(){
+	scrollpos--;
+	for(int i = height - 1; i > 0; i--){
+		charsshown[i] = charsshown[i - 1];
+	}
+	if(haschoice || isbook){
+		charsshown[0] = linelength.at(scrollpos);
+	} else {
+		charsshown[0] = 0;
+	}
 }
 
 bool TextBox::isActive(){
 	return active;
 }
 
-void TextBox::input(){
-	if(scrollpos + linesshown >= lines.size() - 1){
-		active = false;
-		reset();
+bool TextBox::hasChoice(){
+	return haschoice;
+}
+
+bool TextBox::isBook(){
+	return isbook;
+}
+
+bool TextBox::isSpeech(){
+	return !(haschoice || isbook);
+}
+
+void TextBox::advance(){
+	if(!(haschoice || isbook)){
+		if(scrollpos + linesshown >= lines.size() - 1){
+			active = false;
+			//reset();
+		} else {
+			advanceLine();
+		}
 	} else {
-		advanceLine();
+		active = false;
 	}
 	waitforinput = false;
+}
+
+void TextBox::next(){
+	if(scrollpos + cursorpos < lines.size() - 1){
+		if(cursorpos == height - 1){
+			advanceLine();
+		} else {
+			cursorpos++;
+		}
+	}
+}
+
+void TextBox::prev(){
+	if(scrollpos + cursorpos > 0){
+		if(cursorpos == 0){
+			prevLine();
+		} else {
+			cursorpos--;
+		}
+	}
+}
+
+void TextBox::nextPage(){
+	if(!lastpage){
+		firstpage = false;
+		int u = scrollpos + height;
+		if(u + height > lines.size()){
+			linesshown = height - u;
+			lastpage = true;
+		} else if(u + height == lines.size()){
+			linesshown = height - 1;
+			lastpage = true;
+		} else {
+			linesshown = height - 1;
+		}
+		for(int i = 0; i < linesshown + 1; i++){
+			charsshown[i] = linelength.at(scrollpos + height + i);
+		}
+		scrollpos += height;
+	}
+}
+
+void TextBox::prevPage(){
+	if(!firstpage){
+		lastpage = false;
+		scrollpos -= height;
+		linesshown = height - 1;
+		if(scrollpos == 0){
+			firstpage = true;
+		}
+		for(int i = 0; i < height; i++){
+			charsshown[i] = linelength.at(i);
+		}
+	}
 }
 
 void TextBox::loadFile(std::string f){
@@ -178,6 +295,9 @@ void TextBox::loadFile(std::string f){
 	for(int i = 0; i < l.size(); i++){
 		//chars = lines.at(i).c_str();
 		linelength.push_back(l.at(i).length());
+		if(haschoice || isbook){
+			charsshown[i] = linelength.at(i);
+		}
 		chars = new char[linelength.at(i) + 1];
 		strcpy(chars, l.at(i).c_str());
 		u = new int[linelength.at(i)];
@@ -186,6 +306,9 @@ void TextBox::loadFile(std::string f){
 		}
 		lines.push_back(u);
 	}
+	if(isbook && lines.size() <= height){
+		lastpage = true;
+	}
 	fileloaded = true;
 }
 
@@ -193,7 +316,16 @@ void TextBox::reset(){
 	timer = 0;
 	scrollpos = 0;
 	fileloaded = false;
-	linesshown = 0;
+	if(haschoice || isbook){
+		//xofs = 12;
+		linesshown = height - 1;
+		//waitforinput = true;
+	} else {
+		//xofs = 4;
+		linesshown = 0;
+		//waitforinput = false;
+	}
+	//linesshown = 0;
 	scrollpos = 0;
 	for(int i = 0; i < height; i++){
 		charsshown[i] = 0;
@@ -219,4 +351,8 @@ void TextBox::tick(){
 
 bool TextBox::fileLoaded(){
 	return fileloaded;
+}
+
+int TextBox::getChoice(){
+	return scrollpos + cursorpos;
 }

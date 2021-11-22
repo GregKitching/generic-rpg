@@ -110,6 +110,7 @@ Map::Map(std::string f, int warpnum, dir direction){
 	int *u = new int[2];
 	getWarpPos(u, warpnum);
 	entities.at(0).setLocation(u[0], u[1]);
+	entities.at(0).setMovPer(getMovementPermission(u[0], u[1]));
 	delete u;
 	entities.at(0).setFacingDir(direction);
 }

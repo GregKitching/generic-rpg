@@ -39,6 +39,8 @@ class Entity{
 		void move(dir direction);//, Map *map, std::vector<Entity> *entities);
 		void animateMove();
 		int getMoveTimer();
+		movper getMovPer();
+		void setMovPer(movper a);
 		bool isAnimated();
 		bool isRendered();
 		bool isSolid();

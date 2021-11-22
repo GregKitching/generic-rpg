@@ -1,0 +1,7 @@
+halt
+faceplayer
+createtextbox(4)
+display(aaah)
+destroytextbox
+unhalt
+return

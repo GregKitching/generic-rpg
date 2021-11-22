@@ -186,6 +186,14 @@ int Entity::getMoveTimer(){
 	return movetimer;
 }
 
+movper Entity::getMovPer(){
+	return currentmovper;
+}
+
+void Entity::setMovPer(movper a){
+	currentmovper = a;
+}
+
 bool Entity::isAnimated(){
 	return animated;
 }

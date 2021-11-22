@@ -1,2 +1,10 @@
-warp(0, up, aaab)
-return
+halt
+faceplayer
+createtextbox(0)
+display(aaae)
+createtextbox(1)
+display(ysno)
+destroytextbox
+branch(0)
+jump(aaah)
+jump(aaai)
