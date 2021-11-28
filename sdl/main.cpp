@@ -16,6 +16,7 @@
 #include "TileSet.h"
 #include "Map.h"
 #include "Entity.h"
+#include "ActiveEntity.h"
 #include "TextBox.h"
 #include "Script.h"
 #include "Globals.h"
@@ -311,20 +312,25 @@ void createEntity(){
 	std::cin.ignore();
 	std::getline(std::cin, scr);
 	printf("a\n");
-	Entity *ent = new Entity(t, x, y, s, a, r, sl, i, d, scr, entities.size());
-	if(t == ENTTYPE_WARP){
-		std::cout << "Warp num:" << std::endl;
-		std::cin >> temp;
-		w = std::stoi(temp);
-		ent->setWarpNum(w);
+	if(t < ENTTYPE_SIGN){
+		ActiveEntity *ae = new ActiveEntity(t, x, y, i, scr, entities.size(), s, a, r, sl, d);
+		entities.push_back(ae);
+	} else {
+		Entity *ent = new Entity(t, x, y, i, scr, entities.size());
+		if(t == ENTTYPE_WARP){
+			std::cout << "Warp num:" << std::endl;
+			std::cin >> temp;
+			w = std::stoi(temp);
+			ent->setWarpNum(w);
+		}
+		entities.push_back(ent);
 	}
-	entities.push_back(*ent);
 }
 	
 
 int getInteractableEntityAtPosition(int x, int y){
 	for(int i = 0; i < entities.size(); i++){
-		if(entities.at(i).getXPos() == x && entities.at(i).getYPos() == y && entities.at(i).isInteractable()){
+		if(entities.at(i)->getXPos() == x && entities.at(i)->getYPos() == y && entities.at(i)->isInteractable()){
 			return i;
 		}
 	}
@@ -397,16 +403,19 @@ void renderMap(Map *map, TileSet *tileset, SpriteSheet *spritesheet, int *range,
 	}
 }
 
-void renderEntities(std::vector<Entity> *entities, SpriteSheet *spritesheet, int *range, SDL_Rect *srcrect, SDL_Rect *dstrect){
+void renderEntities(SpriteSheet *spritesheet, int *range, SDL_Rect *srcrect, SDL_Rect *dstrect){
 	int temp;
-	for(int i = 0; i < entities->size(); i++){
-		if(entities->at(i).getXPos() > range[0] & entities->at(i).getXPos() <= range[1] & entities->at(i).getYPos() > range[2] & entities->at(i).getYPos() <= range[3] & entities->at(i).isRendered()){// == ENTTYPE_PLAYER || entities->at(i).getType() == ENTTYPE_NPC){
-			temp = entities->at(i).getSprite();
-			srcrect->x = spritesheet->getTileX(temp);
-			srcrect->y = spritesheet->getTileY(temp);
-			dstrect->x = entities->at(i).getSpriteXPos() - camposx;
-			dstrect->y = entities->at(i).getSpriteYPos() - camposy;
-			SDL_RenderCopy(renderer, spritesheet->getTexture(), srcrect, dstrect);
+	for(int i = 0; i < entities.size(); i++){
+		if(entities.at(i)->getXPos() > range[0] & entities.at(i)->getXPos() <= range[1] & entities.at(i)->getYPos() > range[2] & entities.at(i)->getYPos() <= range[3] & entities.at(i)->getType() < ENTTYPE_SIGN){
+			ActiveEntity *ae = static_cast<ActiveEntity*>(entities.at(i));
+			if(ae->isRendered()){
+				temp = ae->getSprite();
+				srcrect->x = spritesheet->getTileX(temp);
+				srcrect->y = spritesheet->getTileY(temp);
+				dstrect->x = ae->getSpriteXPos() - camposx;
+				dstrect->y = ae->getSpriteYPos() - camposy;
+				SDL_RenderCopy(renderer, spritesheet->getTexture(), srcrect, dstrect);
+			}
 		}
 	}
 }
@@ -429,12 +438,12 @@ void buttonAction(){
 	if(caninteract){
 		//printf("1\n");
 		caninteract = false;
-		int *facingpos = entities.at(0).getAdjacentTile(entities.at(0).getFacingDir(), map);
+		int *facingpos = player->getAdjacentTile(player->getFacingDir(), map);
 		int u = getInteractableEntityAtPosition(facingpos[0], facingpos[1]);
 		delete facingpos;
 		if(u != -1){
-			if(entities.at(u).getType() < ENTTYPE_SCRIPT){
-				currentscript = new Script(u, entities.at(u).getScript());
+			if(entities.at(u)->getType() < ENTTYPE_SCRIPT){
+				currentscript = new Script(u, entities.at(u)->getScript());
 			}
 		}
 	} else {
@@ -702,15 +711,15 @@ Uint32 renderFunc(Uint32 interval, void *param){
 		}
 		switch(programmode){
 			case NORMAL_GAMEPLAY:
-			if(entities.at(0).getMoveTimer() == 0 && canmove){
+			if(player->getMoveTimer() == 0 && canmove){
 				if(akey && !dkey && !wkey && !skey){
-					entities.at(0).move(DIR_LEFT);//, map, &entities);
+					player->move(DIR_LEFT);//, map, &entities);
 				} else if (dkey && !akey && !wkey && !skey){
-					entities.at(0).move(DIR_RIGHT);//, map, &entities);
+					player->move(DIR_RIGHT);//, map, &entities);
 				} else if (wkey && !skey){
-					entities.at(0).move(DIR_UP);//, map, &entities);
+					player->move(DIR_UP);//, map, &entities);
 				} else if (skey && !wkey){
-					entities.at(0).move(DIR_DOWN);//, map, &entities);
+					player->move(DIR_DOWN);//, map, &entities);
 				}
 			}
 			break;
@@ -729,8 +738,11 @@ Uint32 renderFunc(Uint32 interval, void *param){
 			break;
 		}
 		for(int i = 0; i < entities.size(); i++){
-			if(entities.at(i).getMoveTimer() > 0){
-				entities.at(i).animateMove();
+			if(entities.at(i)->getType() < ENTTYPE_SIGN){
+				ActiveEntity *ae = static_cast<ActiveEntity*>(entities.at(i));
+				if(ae->getMoveTimer() > 0){
+					ae->animateMove();
+				}
 			}
 		}
 		/*for(int i = 0; i < entities.size(); i++){
@@ -739,14 +751,14 @@ Uint32 renderFunc(Uint32 interval, void *param){
 			}
 		}*/
 		if(camerafollowplayer){
-			camposx = entities.at(0).getSpriteXPos() - 92;
-			camposy = entities.at(0).getSpriteYPos() - 67;
+			camposx = player->getSpriteXPos() - 92;
+			camposy = player->getSpriteYPos() - 67;
 		}
 		visibleTiles(visrange, camposx, camposy);
 		SDL_RenderClear(renderer);
 		renderMap(map, tileset, basic, visrange, &srcrectsubtiles, &dstrectsubtiles);
 		if(programmode == NORMAL_GAMEPLAY | renderentities){
-			renderEntities(&entities, characters, visrange, &srcrecttiles, &dstrecttiles);
+			renderEntities(characters, visrange, &srcrecttiles, &dstrecttiles);
 		}
 		if (programmode == MAP_EDITOR){
 			if(setmovementpermissions){
@@ -847,11 +859,11 @@ void init(int loadfromfile, int mapw, int maph, std::string fname){
 	}
 	caninteract = true;
 	canmove = true;
-	Entity *en;
-	en = new Entity(ENTTYPE_PLAYER, 0, 0, 4, true, true, true, true, DIR_DOWN, "null", 0);
-	entities.push_back(*en);
+	player = new ActiveEntity(ENTTYPE_PLAYER, 0, 0, true, "null", 0, 4, true, true, true, DIR_DOWN);
+	//en = new Entity(ENTTYPE_PLAYER, 0, 0, 4, true, true, true, true, DIR_DOWN, "null", 0);
+	entities.push_back(player);
 	if(programmode == MAP_EDITOR){
-		entities.at(0).setRendered(false);
+		player->setRendered(false);
 	}
 	//en = new Entity(ENTTYPE_NPC, 12, 10, 7, true, true, true, true, DIR_DOWN, "aaab");
 	//entities.push_back(*en);
@@ -913,6 +925,8 @@ void init(int loadfromfile, int mapw, int maph, std::string fname){
 	heap = new uint8_t[256];
 	renderflag = true;
 	rendering = true;
+	//Person *f = new Person(ENTTYPE_NPC, 2, 2, 1, true, true, true, true, DIR_DOWN, "null", 0, 1, 2);
+	//printf("%d, %d\n", f->getXPos(), f->getH1());
 	SDL_TimerID timer1 = SDL_AddTimer(16, renderFunc, NULL);
 	scriptthread = SDL_CreateThread(scriptThread, "scriptThread", (void*) NULL);
 	SDL_DetachThread(scriptthread);

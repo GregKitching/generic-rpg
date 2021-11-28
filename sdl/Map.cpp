@@ -70,12 +70,13 @@ Map::Map(std::string f, int warpnum, dir direction){
 			movementpermissions[i] = (movper) std::stoi(line);
 		}
 		getline(mapfile, line);
-		Entity *e;
+		//Entity *e;
 		int entnum = std::stoi(line);
 		enttype t;
 		int x, y, s;
 		bool a, r, sl, i;
 		dir d;
+		std::string scr;
 		int w = 0;
 		for(int j = 0; j < entnum; j++){
 			getline(mapfile, line);
@@ -85,33 +86,39 @@ Map::Map(std::string f, int warpnum, dir direction){
 			getline(mapfile, line);
 			y = std::stoi(line);
 			getline(mapfile, line);
-			s = std::stoi(line);
-			getline(mapfile, line);
-			a = (bool) std::stoi(line);
-			getline(mapfile, line);
-			r = (bool) std::stoi(line);
-			getline(mapfile, line);
-			sl = (bool) std::stoi(line);
-			getline(mapfile, line);
 			i = (bool) std::stoi(line);
-			getline(mapfile, line);
-			d = (dir) std::stoi(line);
-			getline(mapfile, line);
-			e = new Entity(t, x, y, s, a, r, sl, i, d, line, j + 1);
-			if(t == ENTTYPE_WARP){
-				e->setWarpNum(w);
-				w++;
+			getline(mapfile, scr);
+			if(t < ENTTYPE_SIGN){
+				getline(mapfile, line);
+				s = std::stoi(line);
+				getline(mapfile, line);
+				a = (bool) std::stoi(line);
+				getline(mapfile, line);
+				r = (bool) std::stoi(line);
+				getline(mapfile, line);
+				sl = (bool) std::stoi(line);
+				getline(mapfile, line);
+				d = (dir) std::stoi(line);
+				ActiveEntity *ae = new ActiveEntity(t, x, y, i, scr, entities.size(), s, a, r, sl, d);
+				entities.push_back(ae);
+			} else {
+				Entity *e = new Entity(t, x, y, i, scr, entities.size());
+				if(t == ENTTYPE_WARP){
+					getline(mapfile, line);
+					e->setWarpNum(std::stoi(line));
+				}
+				entities.push_back(e);
 			}
-			entities.push_back(*e);
 		}
 	}
 	mapfile.close();
 	int *u = new int[2];
 	getWarpPos(u, warpnum);
-	entities.at(0).setLocation(u[0], u[1]);
-	entities.at(0).setMovPer(getMovementPermission(u[0], u[1]));
+	player->setLocation(u[0], u[1]);
+	player->updateSpriteLocation();
+	player->setMovPer(getMovementPermission(u[0], u[1]));
 	delete u;
-	entities.at(0).setFacingDir(direction);
+	player->setFacingDir(direction);
 	if(programmode == NORMAL_GAMEPLAY){
 		currentscript = new Script(-1, loadscript);
 	}
@@ -222,26 +229,32 @@ void Map::save(std::string f){
 		mapfile << std::to_string(entities.size() - 1);
 		mapfile << "\n";
 		for(int i = 1; i < entities.size(); i++){
-			mapfile << std::to_string((int) entities.at(i).getType());
+			mapfile << std::to_string((int) entities.at(i)->getType());
 			mapfile << "\n";
-			mapfile << std::to_string(entities.at(i).getXPos());
+			mapfile << std::to_string(entities.at(i)->getXPos());
 			mapfile << "\n";
-			mapfile << std::to_string(entities.at(i).getYPos());
+			mapfile << std::to_string(entities.at(i)->getYPos());
 			mapfile << "\n";
-			mapfile << std::to_string(entities.at(i).getSprite());
+			mapfile << std::to_string((int) entities.at(i)->isInteractable());
 			mapfile << "\n";
-			mapfile << std::to_string((int) entities.at(i).isAnimated());
+			mapfile << entities.at(i)->getScript();
 			mapfile << "\n";
-			mapfile << std::to_string((int) entities.at(i).isRendered());
-			mapfile << "\n";
-			mapfile << std::to_string((int) entities.at(i).isSolid());
-			mapfile << "\n";
-			mapfile << std::to_string((int) entities.at(i).isInteractable());
-			mapfile << "\n";
-			mapfile << std::to_string((int) entities.at(i).getFacingDir());
-			mapfile << "\n";
-			mapfile << entities.at(i).getScript();
-			mapfile << "\n";
+			if(entities.at(i)->getType() < ENTTYPE_SIGN){
+				ActiveEntity *ae = static_cast<ActiveEntity*>(entities.at(i));
+				mapfile << std::to_string(ae->getSprite());
+				mapfile << "\n";
+				mapfile << std::to_string((int) ae->isAnimated());
+				mapfile << "\n";
+				mapfile << std::to_string((int) ae->isRendered());
+				mapfile << "\n";
+				mapfile << std::to_string((int) ae->isSolid());
+				mapfile << "\n";
+				mapfile << std::to_string((int) ae->getFacingDir());
+				mapfile << "\n";
+			} else if (entities.at(i)->getType() == ENTTYPE_WARP){
+				mapfile << std::to_string(entities.at(i)->getWarpNum());
+				mapfile << "\n";
+			}
 		}
 		printf("Map saved as %s\n", filename.c_str());
 	}
@@ -253,9 +266,9 @@ void Map::getWarpPos(int *u, int warpnum){
 	//int *u = new int[2];
 	Entity *e = NULL;
 	for(int i = 1; i < entities.size(); i++){
-		if(entities.at(i).getType() == ENTTYPE_WARP){
+		if(entities.at(i)->getType() == ENTTYPE_WARP){
 			if(j == warpnum){
-				e = &entities.at(i);
+				e = entities.at(i);
 				break;
 			}
 			j++;

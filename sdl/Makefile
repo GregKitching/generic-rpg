@@ -1,8 +1,8 @@
 CPP = g++
 CFLAGS = -03
 LDFLAGS =
-DEPS = constants.h enums.h SpriteSheet.h Tile.h TileSet.h Map.h Entity.h TextBox.h Script.h
-OBJ = main.o SpriteSheet.o Tile.o TileSet.o Map.o Entity.o TextBox.o Script.o
+DEPS = constants.h enums.h SpriteSheet.h Tile.h TileSet.h Map.h Entity.h ActiveEntity.h TextBox.h Script.h
+OBJ = main.o SpriteSheet.o Tile.o TileSet.o Map.o Entity.o ActiveEntity.o TextBox.o Script.o
 
 sdl_cflags := $(shell pkg-config --cflags sdl2 SDL2_mixer SDL2_image)
 sdl_libs := $(shell pkg-config --libs sdl2 SDL2_mixer SDL2_image)

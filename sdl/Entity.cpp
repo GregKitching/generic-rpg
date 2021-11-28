@@ -13,7 +13,8 @@
 uint8_t *heap;
 pmode programmode;
 //TextBox *maintextbox;
-std::vector<Entity> entities;
+std::vector<Entity*> entities;
+//std::vector<ActiveEntity> actents;
 Map *map;
 bool caninteract;
 bool canmove;
@@ -24,35 +25,36 @@ bool rendering;
 SDL_Renderer *renderer;
 std::vector<TextBox*> textboxes;
 SDL_Texture *textboxtexture;
+ActiveEntity *player;
 
-Entity::Entity(enttype t, int x, int y, int s, bool a, bool r, bool sl, bool i, dir d, std::string sc, int e){
+Entity::Entity(enttype t, int x, int y, bool i, std::string sc, int e){
 	type = t;
 	xpos = x;
 	ypos = y;
-	spritexpos = x * tilesize;
+	/*spritexpos = x * tilesize;
 	spriteypos = y * tilesize;
 	basesprite = s;
 	animated = a;
 	rendered = r;
-	solid = sl;
+	solid = sl;*/
 	interactable = i;
-	facing = d;
+	//facing = d;
 	script = sc;
 	entnum = e;
-	walkcycle = 0;
+	/*walkcycle = 0;
 	movedir = DIR_DOWN;
 	movetimer = 0;
 	oddwalkcycle = false;
-	busy = false;
+	busy = false;*/
 	currentmovper = MOVEMENT_DEFAULT;
-	state = ENTSTATE_NONE;
+	//state = ENTSTATE_NONE;
 }
 
 void Entity::setLocation(int x, int y){
 	xpos = x;
 	ypos = y;
-	spritexpos = x * tilesize;
-	spriteypos = y * tilesize;
+	//spritexpos = x * tilesize;
+	//spriteypos = y * tilesize;
 }
 
 enttype Entity::getType(){
@@ -67,7 +69,7 @@ int Entity::getYPos(){
 	return ypos;
 }
 
-int Entity::getSpriteXPos(){
+/*int Entity::getSpriteXPos(){
 	return spritexpos;
 }
 
@@ -121,7 +123,7 @@ bool Entity::canMove(int newx, int newy, dir direction){//, Map *map, std::vecto
 				move2(newx, newy);
 				currentmovper = MOVEMENT_LAYER1;
 			}
-		}*/
+		}
 	}
 	return true;
 }
@@ -185,7 +187,7 @@ void Entity::animateMove(){
 
 int Entity::getMoveTimer(){
 	return movetimer;
-}
+}*/
 
 movper Entity::getMovPer(){
 	return currentmovper;
@@ -195,7 +197,7 @@ void Entity::setMovPer(movper a){
 	currentmovper = a;
 }
 
-bool Entity::isAnimated(){
+/*bool Entity::isAnimated(){
 	return animated;
 }
 
@@ -209,7 +211,7 @@ void Entity::setRendered(bool u){
 
 bool Entity::isSolid(){
 	return solid;
-}
+}*/
 
 bool Entity::isInteractable(){
 	return interactable;
@@ -254,7 +256,7 @@ std::string Entity::getScript(){
 	return script;
 }
 
-void Entity::tick(){
+/*void Entity::tick(){
 	switch(state){
 		case ENTSTATE_NONE:
 		break;
@@ -281,7 +283,7 @@ bool Entity::isBusy(){
 
 void Entity::setBusy(){
 	busy = true;
-}
+}*/
 
 int Entity::getWarpNum(){
 	return warpnum;

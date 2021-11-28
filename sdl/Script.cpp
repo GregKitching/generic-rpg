@@ -13,7 +13,7 @@
 
 extern uint8_t *heap;
 //extern TextBox *maintextbox;
-extern std::vector<Entity> entities;
+extern std::vector<Entity*> entities;
 extern Map *map;
 extern bool caninteract;
 extern bool canmove;
@@ -28,6 +28,7 @@ Script::Script(int a, std::string filename){
 	std::string line;
 	if(stat(scriptname.c_str(), &result) != 0){
 		printf("Fail\n");
+		printf("%s\n", scriptname.c_str());
 	} else {
 		int size = result.st_size;
 		char *temp = new char[size];
@@ -161,7 +162,8 @@ std::string Script::getStringArg(){
 }*/
 
 void Script::waitForEntity(int ent){
-	while(entities.at(ent).isBusy()){
+	ActiveEntity *ae = static_cast<ActiveEntity*>(entities.at(ent));
+	while(ae->isBusy()){
 		//usleep(16666);
 	}
 }
@@ -176,6 +178,7 @@ void Script::executeCommand(){
 	/*while(waiting){
 		printf("waiting\n");
 	}*/
+	ActiveEntity *ae;
 	switch(commands.at(commandpos)){
 		case CMD_NOP:
 		//nextcommand = true;
@@ -204,7 +207,7 @@ void Script::executeCommand(){
 		//int u = getIntArg();
 		//argumentpos++;
 		waitForEntity(entitynum);
-		entities.at(entitynum).setFacingDir(oppositeDir(entities.at(0).getFacingDir()));
+		static_cast<ActiveEntity*>(entities.at(entitynum))->setFacingDir(oppositeDir(player->getFacingDir()));
 		//nextCommand();
 		break;
 		
@@ -268,13 +271,13 @@ void Script::executeCommand(){
 		
 		case CMD_FACECURRENT:
 		var1 = getIntArg();
-		entities.at(entitynum).setFacingDir((dir) var1);
+		static_cast<ActiveEntity*>(entities.at(entitynum))->setFacingDir((dir) var1);
 		//waitForEntity(entitynum);
 		break;
 		
 		case CMD_MOVECURRENT:
 		var1 = getIntArg();
-		entities.at(entitynum).move((dir) var1);
+		static_cast<ActiveEntity*>(entities.at(entitynum))->move((dir) var1);
 		waitForEntity(entitynum);
 		break;
 		
@@ -336,14 +339,14 @@ void Script::executeCommand(){
 		case CMD_FACE:
 		var1 = getIntArg();
 		var2 = getIntArg();
-		entities.at(var1).setFacingDir((dir) var2);
+		static_cast<ActiveEntity*>(entities.at(var1))->setFacingDir((dir) var2);
 		//waitForEntity(var1);
 		break;
 		
 		case CMD_MOVE:
 		var1 = getIntArg();
 		var2 = getIntArg();
-		entities.at(var1).move((dir) var2);
+		static_cast<ActiveEntity*>(entities.at(var1))->move((dir) var2);
 		waitForEntity(var1);
 		break;
 		
@@ -366,9 +369,10 @@ void Script::executeCommand(){
 		var2 = getIntArg();
 		var3 = getIntArg();
 		//waiting = true;
+		ae = static_cast<ActiveEntity*>(entities.at(var1));
 		for(int i = 0; i < var3; i++){
 			//entities.at(var1).setBusy();
-			entities.at(var1).move((dir) var2);
+			ae->move((dir) var2);
 			waitForEntity(var1);
 		}
 		//waiting = false;
@@ -390,6 +394,7 @@ void Script::executeCommand(){
 		entities.erase(entities.begin() + 1, entities.end());
 		map = new Map(path, var1, (dir) var2);
 		renderflag = true;
+		break;
 	}
 	commandpos++;
 	//return u;

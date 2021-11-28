@@ -2,56 +2,56 @@
 #define _ENTITY_
 
 class Entity{
-	private:
+	protected:
 		enttype type;
 		int entnum;
 		int xpos;//In terms of 16x16 tiles
 		int ypos;
-		int spritexpos;//In terms of pixels
+		/*int spritexpos;//In terms of pixels
 		int spriteypos;
 		int basesprite;
-		int walkcycle;
+		int walkcycle;*/
 		int warpnum;
-		dir facing;
+		/*dir facing;
 		dir movedir;
 		bool animated;
 		bool rendered;
-		bool solid;
+		bool solid;*/
 		bool interactable;
-		bool busy;
+		/*bool busy;
 		int movetimer;
-		bool oddwalkcycle;
+		bool oddwalkcycle;*/
 		movper currentmovper;
-		entstate state;
+		//entstate state;
 		std::string script;
-		bool canMove(int newx, int newy, dir direction);//, Map *map, std::vector<Entity> *entities);
+		//bool canMove(int newx, int newy, dir direction);//, Map *map, std::vector<Entity> *entities);
 	public:
-		Entity(enttype t, int x, int y, int s, bool a, bool r, bool sl, bool i, dir d, std::string sc, int e);
+		Entity(enttype t, int x, int y, bool i, std::string sc, int e);
 		void setLocation(int x, int y);
 		enttype getType();
 		int getXPos();
 		int getYPos();
-		int getSpriteXPos();
+		/*int getSpriteXPos();
 		int getSpriteYPos();
 		int getSprite();
 		dir getFacingDir();
 		void setFacingDir(dir direction);
 		void move(dir direction);//, Map *map, std::vector<Entity> *entities);
 		void animateMove();
-		int getMoveTimer();
+		int getMoveTimer();*/
 		movper getMovPer();
 		void setMovPer(movper a);
-		bool isAnimated();
+		/*bool isAnimated();
 		bool isRendered();
 		void setRendered(bool u);
-		bool isSolid();
+		bool isSolid();*/
 		bool isInteractable();
 		int* getAdjacentTile(dir direction, Map *map);
 		std::string getScript();
-		void tick();
+		/*void tick();
 		entstate getState();
 		bool isBusy();
-		void setBusy();
+		void setBusy();*/
 		int getWarpNum();
 		void setWarpNum(int w);
 };
