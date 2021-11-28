@@ -44,13 +44,15 @@ bool setmovementpermissions = false;
 
 bool camerafollowplayer = false;
 
+bool renderentities;
+
 int camposx;
 int camposy;
 
 int mouseposx;
 int mouseposy;
 
-pmode programmode;
+//pmode programmode;
 
 bool clickaction = false;
 //bool buttonaction = false;
@@ -78,7 +80,7 @@ TileSet *tileset;
 //Map *map;
 //std::vector<Entity> entities;
 //SDL_Texture *textboxtexture = NULL;
-SDL_Texture *letterA = NULL;
+SDL_Texture *movpertex = NULL;
 
 int *visrange;
 
@@ -246,6 +248,80 @@ void setOutsideTile(Map *map, TileSet *tileset){
 	}
 }
 
+void setMapScript(){
+	std::string name;
+	std::cout << "Enter map run-on-load script:" << std::endl;
+	std::cin >> name;
+	map->setScript(name);
+	printf("Map run-on-load script set to %s.\n", name.c_str());
+}
+
+bool parseBoolString(std::string temp){
+	bool repeat = true;
+	bool u;
+	do{
+		if(temp.compare("true") == 0){
+			u = true;
+			repeat = false;
+		} else if (temp.compare("false") == 0){
+			u = false;
+			repeat = false;
+		} else {
+			printf("Please enter a valid boolean value.\n");
+		}
+	} while (repeat);
+	return u;
+}
+
+void createEntity(){
+	enttype t;
+	int x, y, s, w;
+	bool a, r, sl, i;
+	std::string scr;
+	dir d;
+	std::string temp;
+	std::cout << "Enter entity type:" << std::endl;
+	std::cin >> temp;
+	t = (enttype) std::stoi(temp);
+	std::cout << "X position:" << std::endl;
+	std::cin >> temp;
+	x = std::stoi(temp);
+	std::cout << "Y position:" << std::endl;
+	std::cin >> temp;
+	y = std::stoi(temp);
+	std::cout << "Default sprite:" << std::endl;
+	std::cin >> temp;
+	s = std::stoi(temp);
+	std::cout << "Is animated:" << std::endl;
+	std::cin >> temp;
+	a = parseBoolString(temp);
+	std::cout << "Is rendered:" << std::endl;
+	std::cin >> temp;
+	r = parseBoolString(temp);
+	std::cout << "Is solid:" << std::endl;
+	std::cin >> temp;
+	sl = parseBoolString(temp);
+	std::cout << "Is interactable:" << std::endl;
+	std::cin >> temp;
+	i = parseBoolString(temp);
+	std::cout << "Direction facing:" << std::endl;
+	std::cin >> temp;
+	d = (dir) std::stoi(temp);
+	std::cout << "Script name:" << std::endl;
+	std::cin.ignore();
+	std::getline(std::cin, scr);
+	printf("a\n");
+	Entity *ent = new Entity(t, x, y, s, a, r, sl, i, d, scr, entities.size());
+	if(t == ENTTYPE_WARP){
+		std::cout << "Warp num:" << std::endl;
+		std::cin >> temp;
+		w = std::stoi(temp);
+		ent->setWarpNum(w);
+	}
+	entities.push_back(*ent);
+}
+	
+
 int getInteractableEntityAtPosition(int x, int y){
 	for(int i = 0; i < entities.size(); i++){
 		if(entities.at(i).getXPos() == x && entities.at(i).getYPos() == y && entities.at(i).isInteractable()){
@@ -324,13 +400,27 @@ void renderMap(Map *map, TileSet *tileset, SpriteSheet *spritesheet, int *range,
 void renderEntities(std::vector<Entity> *entities, SpriteSheet *spritesheet, int *range, SDL_Rect *srcrect, SDL_Rect *dstrect){
 	int temp;
 	for(int i = 0; i < entities->size(); i++){
-		if(entities->at(i).getXPos() > range[0] && entities->at(i).getXPos() <= range[1] && entities->at(i).getYPos() > range[2] && entities->at(i).getYPos() <= range[3] && entities->at(i).isRendered()){// == ENTTYPE_PLAYER || entities->at(i).getType() == ENTTYPE_NPC){
+		if(entities->at(i).getXPos() > range[0] & entities->at(i).getXPos() <= range[1] & entities->at(i).getYPos() > range[2] & entities->at(i).getYPos() <= range[3] & entities->at(i).isRendered()){// == ENTTYPE_PLAYER || entities->at(i).getType() == ENTTYPE_NPC){
 			temp = entities->at(i).getSprite();
 			srcrect->x = spritesheet->getTileX(temp);
 			srcrect->y = spritesheet->getTileY(temp);
 			dstrect->x = entities->at(i).getSpriteXPos() - camposx;
 			dstrect->y = entities->at(i).getSpriteYPos() - camposy;
 			SDL_RenderCopy(renderer, spritesheet->getTexture(), srcrect, dstrect);
+		}
+	}
+}
+
+void renderMovPer(int *range, SDL_Rect *srcrect, SDL_Rect *dstrect){
+	int temp;
+	srcrect->y = 0;
+	for(int i = range[2]; i <= range[3]; i++){
+		dstrect->y = i * tilesize - camposy;
+		for(int j = range[0]; j <= range[1]; j++){
+			dstrect->x = j * tilesize - camposx;
+			temp = (int) map->getMovementPermission(j, i);
+			srcrect->x = temp * tilesize;
+			SDL_RenderCopy(renderer, movpertex, srcrect, dstrect);
 		}
 	}
 }
@@ -393,11 +483,27 @@ Uint32 renderFunc(Uint32 interval, void *param){
 					}
 					break;
 					
+					case SDLK_e:
+					renderentities = !renderentities;
+					break;
+					
 					case SDLK_l:
 					lkey = true;
 					/*if(programmode == TILESET_EDITOR){
 						switchLayer();
 					}*/
+					break;
+					
+					case SDLK_z:
+					if(programmode == MAP_EDITOR){
+						setMapScript();
+					}
+					break;
+					
+					case SDLK_c:
+					if(programmode == MAP_EDITOR){
+						createEntity();
+					}
 					break;
 					
 					case SDLK_SEMICOLON:
@@ -639,8 +745,13 @@ Uint32 renderFunc(Uint32 interval, void *param){
 		visibleTiles(visrange, camposx, camposy);
 		SDL_RenderClear(renderer);
 		renderMap(map, tileset, basic, visrange, &srcrectsubtiles, &dstrectsubtiles);
-		if(programmode == NORMAL_GAMEPLAY){
+		if(programmode == NORMAL_GAMEPLAY | renderentities){
 			renderEntities(&entities, characters, visrange, &srcrecttiles, &dstrecttiles);
+		}
+		if (programmode == MAP_EDITOR){
+			if(setmovementpermissions){
+				renderMovPer(visrange, &srcrecttiles, &dstrecttiles);
+			}
 		}
 		/*if(maintextbox->getVisible()){
 			maintextbox->renderBox();
@@ -730,12 +841,18 @@ void init(int loadfromfile, int mapw, int maph, std::string fname){
 	}*/
 	if(programmode == NORMAL_GAMEPLAY){
 		camerafollowplayer = true;
+		renderentities = true;
+	} else {
+		renderentities = false;
 	}
 	caninteract = true;
 	canmove = true;
 	Entity *en;
-	en = new Entity(ENTTYPE_PLAYER, 0, 0, 4, true, true, true, true, DIR_DOWN, "", 0);
+	en = new Entity(ENTTYPE_PLAYER, 0, 0, 4, true, true, true, true, DIR_DOWN, "null", 0);
 	entities.push_back(*en);
+	if(programmode == MAP_EDITOR){
+		entities.at(0).setRendered(false);
+	}
 	//en = new Entity(ENTTYPE_NPC, 12, 10, 7, true, true, true, true, DIR_DOWN, "aaab");
 	//entities.push_back(*en);
 	srcrecttiles.x = 0;
@@ -767,8 +884,11 @@ void init(int loadfromfile, int mapw, int maph, std::string fname){
 	font = new SpriteSheet(fontspritesheetname, 16, 3, renderer);
 	SpriteSheet *textboxspritesheet = new SpriteSheet(textboxspritesheetname, 1, 1, renderer);
 	textboxtexture = textboxspritesheet->getTexture();
-	textboxspritesheet = NULL;
+	delete textboxspritesheet;
 	if(programmode == MAP_EDITOR){
+		SpriteSheet *movperspritesheet = new SpriteSheet("assets/images/MovementPermissions.png", 4, 1, renderer);
+		movpertex = movperspritesheet->getTexture();
+		delete movperspritesheet;
 		tileset = new TileSet(tilesetname);
 		if(loadfromfile == 0){
 			map = new Map(mapw, maph);

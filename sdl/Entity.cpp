@@ -11,6 +11,7 @@
 #include "TextBox.h"
 
 uint8_t *heap;
+pmode programmode;
 //TextBox *maintextbox;
 std::vector<Entity> entities;
 Map *map;
@@ -200,6 +201,10 @@ bool Entity::isAnimated(){
 
 bool Entity::isRendered(){
 	return rendered;
+}
+
+void Entity::setRendered(bool u){
+	rendered = u;
 }
 
 bool Entity::isSolid(){

@@ -18,6 +18,7 @@
 #include "Script.h"
 
 extern uint8_t *heap;
+extern pmode programmode;
 //extern TextBox *maintextbox;
 extern std::vector<Entity> entities;
 extern Map *map;

@@ -16,6 +16,7 @@ Map::Map(int w, int h){
 	width = w;
 	height = h;
 	outsidetile = 0;
+	loadscript = "null";
 	int mapsize = width * height;
 	tiles = new int[mapsize];
 	movementpermissions = new movper[mapsize];
@@ -29,6 +30,7 @@ Map::Map(int w, int h, int tilesetlength){
 	width = w;
 	height = h;
 	outsidetile = 0;
+	loadscript = "null";
 	int mapsize = width * height;
 	tiles = new int[mapsize];
 	movementpermissions = new movper[mapsize];
@@ -56,6 +58,8 @@ Map::Map(std::string f, int warpnum, dir direction){
 		height = std::stoi(line);
 		getline(mapfile, line);
 		outsidetile = std::stoi(line);
+		getline(mapfile, line);
+		loadscript = line;
 		int mapsize = width * height;
 		tiles = new int[mapsize];
 		movementpermissions = new movper[mapsize];
@@ -69,13 +73,8 @@ Map::Map(std::string f, int warpnum, dir direction){
 		Entity *e;
 		int entnum = std::stoi(line);
 		enttype t;
-		int x;
-		int y;
-		int s;
-		bool a;
-		bool r;
-		bool sl;
-		bool i;
+		int x, y, s;
+		bool a, r, sl, i;
 		dir d;
 		int w = 0;
 		for(int j = 0; j < entnum; j++){
@@ -113,6 +112,9 @@ Map::Map(std::string f, int warpnum, dir direction){
 	entities.at(0).setMovPer(getMovementPermission(u[0], u[1]));
 	delete u;
 	entities.at(0).setFacingDir(direction);
+	if(programmode == NORMAL_GAMEPLAY){
+		currentscript = new Script(-1, loadscript);
+	}
 }
 
 Map::~Map(){
@@ -209,10 +211,36 @@ void Map::save(std::string f){
 		mapfile << "\n";
 		mapfile << std::to_string(outsidetile);
 		mapfile << "\n";
+		mapfile << loadscript;
+		mapfile << "\n";
 		for(int i = 0; i < width * height; i++){
 			mapfile << std::to_string(tiles[i]);
 			mapfile << "\n";
 			mapfile << std::to_string((int) movementpermissions[i]);
+			mapfile << "\n";
+		}
+		mapfile << std::to_string(entities.size() - 1);
+		mapfile << "\n";
+		for(int i = 1; i < entities.size(); i++){
+			mapfile << std::to_string((int) entities.at(i).getType());
+			mapfile << "\n";
+			mapfile << std::to_string(entities.at(i).getXPos());
+			mapfile << "\n";
+			mapfile << std::to_string(entities.at(i).getYPos());
+			mapfile << "\n";
+			mapfile << std::to_string(entities.at(i).getSprite());
+			mapfile << "\n";
+			mapfile << std::to_string((int) entities.at(i).isAnimated());
+			mapfile << "\n";
+			mapfile << std::to_string((int) entities.at(i).isRendered());
+			mapfile << "\n";
+			mapfile << std::to_string((int) entities.at(i).isSolid());
+			mapfile << "\n";
+			mapfile << std::to_string((int) entities.at(i).isInteractable());
+			mapfile << "\n";
+			mapfile << std::to_string((int) entities.at(i).getFacingDir());
+			mapfile << "\n";
+			mapfile << entities.at(i).getScript();
 			mapfile << "\n";
 		}
 		printf("Map saved as %s\n", filename.c_str());
@@ -235,4 +263,8 @@ void Map::getWarpPos(int *u, int warpnum){
 	}
 	u[0] = e->getXPos();
 	u[1] = e->getYPos();
+}
+
+void Map::setScript(std::string name){
+	loadscript = name;
 }

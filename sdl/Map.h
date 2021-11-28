@@ -8,6 +8,7 @@ class Map{
 		int *tiles;
 		int outsidetile;//Tile to be rendered in areas ouside the map so it's not just surrounded by black
 		movper *movementpermissions;
+		std::string loadscript;
 	public:
 		Map(int w, int h);
 		Map(int w, int h, int tilesetlength);
@@ -27,6 +28,7 @@ class Map{
 		void changeTile(int mouseposx, int mouseposy, int camposx, int camposy, int currenttile);
 		void save(std::string f);
 		void getWarpPos(int *u, int warpnum);
+		void setScript(std::string u);
 };
 
 #endif

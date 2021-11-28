@@ -43,6 +43,7 @@ class Entity{
 		void setMovPer(movper a);
 		bool isAnimated();
 		bool isRendered();
+		void setRendered(bool u);
 		bool isSolid();
 		bool isInteractable();
 		int* getAdjacentTile(dir direction, Map *map);
