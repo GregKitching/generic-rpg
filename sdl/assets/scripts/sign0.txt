@@ -1,6 +1,6 @@
 halt
-createtextbox(4)
-display(aaah)
+createtextbox(0)
+display(aaai)
 destroytextbox
 unhalt
 return

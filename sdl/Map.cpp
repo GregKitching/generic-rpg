@@ -161,6 +161,9 @@ int* Map::getClickedTile(int mouseposx, int mouseposy, int camposx, int camposy)
 	int *tilepos = new int[2];
 	tilepos[0] = ((mouseposx / 4) + camposx) / tilesize;
 	tilepos[1] = ((mouseposy / 4) + camposy) / tilesize;
+	if(programmode != NORMAL_GAMEPLAY){
+		printf("x = %d, y = %d\n", tilepos[0], tilepos[1]);
+	}
 	return tilepos;
 }
 

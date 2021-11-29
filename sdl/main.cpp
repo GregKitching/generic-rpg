@@ -1,5 +1,6 @@
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_image.h>
+#include <SDL2/SDL_mixer.h>
 //#include <SDL2/SDL_ttf.h>
 #include <stdio.h>
 #include <iostream>
@@ -101,6 +102,10 @@ std::string mapname;
 
 SDL_Thread *scriptthread;
 
+int animcycle = 0;
+
+bool setanimproperties = false;
+
 //uint8_t *heap;
 //TextBox *maintextbox;
 
@@ -117,6 +122,7 @@ void quit(){
 	SDL_DestroyWindow(window);
 	window = NULL;
 	//TTF_Quit();
+	Mix_Quit();
 	IMG_Quit();
 	SDL_Quit();
 	active = false;
@@ -210,6 +216,17 @@ void changeSubtile(Map *map, TileSet *tileset){
 	tile->changeSubtile(currentlayer, subtilepos, currentsubtile);
 }
 
+void changeTileAnimated(Map *map, TileSet *tileset){
+	int *tilepos = map->getClickedTile(mouseposx, mouseposy, camposx, camposy);
+	bool u = tileset->getTileObject(map->getTile(tilepos[0], tilepos[1]))->isAnimated();
+	tileset->getTileObject(map->getTile(tilepos[0], tilepos[1]))->setAnimated(!u);
+	if(u){
+		printf("Tile not animated.\n");
+	} else {
+		printf("Tile animated.\n");
+	}
+}
+
 void selectSubtile(dir direction, SpriteSheet *spritesheet){
 	int temp;
 	int max = spritesheet->getSubtileCount();
@@ -257,10 +274,12 @@ void setMapScript(){
 	printf("Map run-on-load script set to %s.\n", name.c_str());
 }
 
-bool parseBoolString(std::string temp){
+bool parseBoolString(){//std::string temp){
 	bool repeat = true;
 	bool u;
+	std::string temp;
 	do{
+		std::cin >> temp;
 		if(temp.compare("true") == 0){
 			u = true;
 			repeat = false;
@@ -290,29 +309,29 @@ void createEntity(){
 	std::cout << "Y position:" << std::endl;
 	std::cin >> temp;
 	y = std::stoi(temp);
-	std::cout << "Default sprite:" << std::endl;
-	std::cin >> temp;
-	s = std::stoi(temp);
-	std::cout << "Is animated:" << std::endl;
-	std::cin >> temp;
-	a = parseBoolString(temp);
-	std::cout << "Is rendered:" << std::endl;
-	std::cin >> temp;
-	r = parseBoolString(temp);
-	std::cout << "Is solid:" << std::endl;
-	std::cin >> temp;
-	sl = parseBoolString(temp);
 	std::cout << "Is interactable:" << std::endl;
-	std::cin >> temp;
-	i = parseBoolString(temp);
-	std::cout << "Direction facing:" << std::endl;
-	std::cin >> temp;
-	d = (dir) std::stoi(temp);
+	//std::cin >> temp;
+	i = parseBoolString();
 	std::cout << "Script name:" << std::endl;
 	std::cin.ignore();
 	std::getline(std::cin, scr);
 	printf("a\n");
 	if(t < ENTTYPE_SIGN){
+		std::cout << "Default sprite:" << std::endl;
+		std::cin >> temp;
+		s = std::stoi(temp);
+		std::cout << "Is animated:" << std::endl;
+		//std::cin >> temp;
+		a = parseBoolString();
+		std::cout << "Is rendered:" << std::endl;
+		//std::cin >> temp;
+		r = parseBoolString();
+		std::cout << "Is solid:" << std::endl;
+		//std::cin >> temp;
+		sl = parseBoolString();
+		std::cout << "Direction facing:" << std::endl;
+		std::cin >> temp;
+		d = (dir) std::stoi(temp);
 		ActiveEntity *ae = new ActiveEntity(t, x, y, i, scr, entities.size(), s, a, r, sl, d);
 		entities.push_back(ae);
 	} else {
@@ -369,6 +388,10 @@ void renderLayer(int layer, Map *map, TileSet *tileset, SpriteSheet *spritesheet
 		for(int j = range[0]; j <= range[1]; j++){
 			dstrect->x = j * tilesize - camposx;
 			temp = map->getTile(j, i);
+			if(tileset->getTileObject(temp)->isAnimated() & animcycle > 63){
+				temp += 20;
+			}
+			//tileset->renderTile(temp, layer, srcrect, dstrect, spritesheet, animcycle > 63);
 			temp2 = tileset->getSubtileFromTile(temp, layer, 0);
 			srcrect->x = spritesheet->getSubtileX(temp2);
 			srcrect->y = spritesheet->getSubtileY(temp2);
@@ -458,6 +481,10 @@ void buttonAction(){
 Uint32 renderFunc(Uint32 interval, void *param){
 	if(renderflag){
 		rendering = true;
+		animcycle++;
+		if(animcycle > 127){
+			animcycle = 0;
+		}
 		SDL_PollEvent(&e);
 		if(e.type == SDL_QUIT){
 			active = false;
@@ -506,7 +533,15 @@ Uint32 renderFunc(Uint32 interval, void *param){
 					case SDLK_z:
 					if(programmode == MAP_EDITOR){
 						setMapScript();
+					} else if (programmode == TILESET_EDITOR){
+						setanimproperties = !setanimproperties;
+						if(setanimproperties){
+							printf("Setting animation properties\n");
+						} else {
+							printf("No longer setting animation properties\n");
+						}
 					}
+						
 					break;
 					
 					case SDLK_c:
@@ -539,7 +574,7 @@ Uint32 renderFunc(Uint32 interval, void *param){
 					case SDLK_o:
 					if(programmode == MAP_EDITOR){
 						setOutsideTile(map, tileset);
-					}
+					}	
 					break;
 					
 					case SDLK_p:
@@ -696,7 +731,11 @@ Uint32 renderFunc(Uint32 interval, void *param){
 					map->changeTile(mouseposx, mouseposy, camposx, camposy, currenttile);
 				}
 			} else if (programmode == TILESET_EDITOR){
-				changeSubtile(map, tileset);
+				if(setanimproperties){
+					changeTileAnimated(map, tileset);
+				} else {
+					changeSubtile(map, tileset);
+				}
 			}
 		}
 		if(pkey){
@@ -828,7 +867,7 @@ int scriptThread(void *param){
 void init(int loadfromfile, int mapw, int maph, std::string fname){
 	camposx = 0;
 	camposy = 0;
-	if(SDL_Init(SDL_INIT_VIDEO | SDL_INIT_TIMER) != 0){
+	if(SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO | SDL_INIT_TIMER) != 0){
 		printf("Could not initialize SDL: %s\n", SDL_GetError());
 	}
 	window = SDL_CreateWindow("Something", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, screenwidth, screenheight, SDL_WINDOW_SHOWN);
@@ -847,6 +886,9 @@ void init(int loadfromfile, int mapw, int maph, std::string fname){
 		printf("Could not initialize SDL_Image: %s\n", SDL_GetError());
 	} else {
 		surface = SDL_GetWindowSurface(window);
+	}
+	if(Mix_OpenAudio(44100, MIX_DEFAULT_FORMAT, 2, 2048) < 0){
+		printf("SDL_Mixer failed to initialize.\n");
 	}
 	/*if(TTF_Init() == -1){
 		printf("Could not initialize SDL_TTF.\n");

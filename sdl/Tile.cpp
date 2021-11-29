@@ -1,6 +1,6 @@
 #include "Tile.h"
 
-Tile::Tile(int *subtiles){
+Tile::Tile(int *subtiles, bool a){
 	layer0 = new int[4];
 	layer1 = new int[4];
 	layer0[0] = subtiles[0];
@@ -11,6 +11,7 @@ Tile::Tile(int *subtiles){
 	layer1[1] = subtiles[5];
 	layer1[2] = subtiles[6];
 	layer1[3] = subtiles[7];
+	animated = a;
 }
 
 int Tile::getSubtile(int layer, int subtile){
@@ -39,4 +40,12 @@ void Tile::changeSubtile(int layer, int subtile, int u){
 		layer1[subtile] = u;
 		break;
 	}
+}
+
+bool Tile::isAnimated(){
+	return animated;
+}
+
+void Tile::setAnimated(bool u){
+	animated = u;
 }

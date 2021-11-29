@@ -23,7 +23,6 @@ extern uint8_t *heap;
 extern pmode programmode;
 //extern TextBox *maintextbox;
 extern std::vector<Entity*> entities;
-//extern std::vector<ActiveEntities> actents;
 extern Map *map;
 extern bool caninteract;
 extern bool canmove;

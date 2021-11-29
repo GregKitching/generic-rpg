@@ -1,21 +1,24 @@
+#include <SDL2/SDL.h>
 #include <stdio.h>
 #include <string>
 #include <iostream>
 #include <fstream>
 
+#include "Globals.h"
+#include "SpriteSheet.h"
 #include "Tile.h"
 #include "TileSet.h"
 
 TileSet::TileSet(int u){
 	int *temp = new int[8];
 	for(int i = 0; i < 8; i++){
-		temp[i] = 479;
+		temp[i] = 479;//The last subtile in basictilesmodified.png, completely transparent
 	}
 	length = u;
 	printf("%d\n", u);
 	tiles = new Tile*[u];
 	for(int i = 0; i < u; i++){
-		tiles[i] = new Tile(temp);
+		tiles[i] = new Tile(temp, false);
 	}
 	delete temp;
 }
@@ -37,7 +40,8 @@ TileSet::TileSet(std::string f){
 				getline(tilesetfile, line);
 				temp[j] = std::stoi(line);
 			}
-			tiles[i] = new Tile(temp);
+			getline(tilesetfile, line);
+			tiles[i] = new Tile(temp, (bool) std::stoi(line));
 		}
 		delete temp;
 		//printf("%d\n", temp[0]);
@@ -67,16 +71,18 @@ void TileSet::saveTileset(std::string f){
 		printf("Error saving to tileset file.\n");
 	} else {
 		tilesetfile << std::to_string(length);
-		tilesetfile << "\n";
+		tilesetfile << std::endl;
 		for(int i = 0; i < length; i++){
 			for(int j = 0; j < 4; j++){
 				tilesetfile << std::to_string(tiles[i]->getSubtile(0, j));
-				tilesetfile << "\n";
+				tilesetfile << std::endl;
 			}
 			for(int j = 0; j < 4; j++){
 				tilesetfile << std::to_string(tiles[i]->getSubtile(1, j));
-				tilesetfile << "\n";
+				tilesetfile << std::endl;
 			}
+			tilesetfile << std::to_string((int) tiles[i]->isAnimated());
+			tilesetfile << std::endl;
 		}
 		printf("Tileset saved as %s\n", filename.c_str());
 		tilesetfile.close();
