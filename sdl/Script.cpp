@@ -10,6 +10,9 @@
 #include "ScriptDefs.h"
 #include "Script.h"
 #include "TextBox.h"
+#include "SpeechTextBox.h"
+#include "MenuTextBox.h"
+#include "BookTextBox.h"
 
 extern uint8_t *heap;
 //extern TextBox *maintextbox;
@@ -93,6 +96,7 @@ Script::Script(int a, std::string filename){
 		}*/
 		//printf("c %lu\n", commands.size());
 		scriptfile.close();
+		delete [] temp;
 		entitynum = a;
 		commandpos = 0;
 		argumentpos = 0;
@@ -148,10 +152,10 @@ std::string Script::getStringArg(){
 		u[i] = arguments.at(argumentpos);
 		argumentpos++;
 	}
-	u[5] = '\0';
+	u[4] = '\0';
 	std::string h = std::string(u).substr(0, 4);
 	//printf("%s\n", h.c_str());
-	delete u;
+	delete [] u;
 	return h;
 }
 
@@ -216,6 +220,7 @@ void Script::executeCommand(){
 		break;
 		
 		case CMD_DESTROYTEXTBOX:
+		//printf("CMD_DESTROYTEXTBOX\n");
 		if(textboxes.size() > 0){
 			delete textboxes.at(textboxes.size() - 1);
 			textboxes.pop_back();
@@ -238,36 +243,35 @@ void Script::executeCommand(){
 		
 		case CMD_CREATETEXTBOX:
 		{
-			textboxtype t = (textboxtype) getIntArg();
+			textboxspawntype t = (textboxspawntype) getIntArg();
 			switch(t){
-				case TEXTBOX_SPEECH:
-				textboxes.push_back(new TextBox(4, 99, 23, 2, false, false));
+				case TEXTBOXSPAWN_SPEECH:
+				textboxes.push_back(new SpeechTextBox(4, 123, 248, 56, 4, 4, 240, 48, 2));
 				break;
 				
-				case TEXTBOX_YESNO:
-				textboxes.push_back(new TextBox(120, 59, 4, 2, true, false));
+				case TEXTBOXSPAWN_YESNO:
+				textboxes.push_back(new MenuTextBox(120, 59, 40, 40, 12, 4, 24, 32));
 				break;
 				
-				case TEXTBOX_MENU:
-				textboxes.push_back(new TextBox(4, 10, 23, 8, true, false));
+				case TEXTBOXSPAWN_MENU:
+				textboxes.push_back(new MenuTextBox(120, 59, 40, 40, 12, 4, 24, 32));
 				break;
 				
-				case TEXTBOX_STORE:
-				textboxes.push_back(new TextBox(4, 10, 23, 8, true, false));
+				case TEXTBOXSPAWN_STORE:
+				textboxes.push_back(new MenuTextBox(120, 59, 40, 40, 12, 4, 24, 32));
 				break;
 				
-				case TEXTBOX_BOOK:
-				textboxes.push_back(new TextBox(4, 10, 23, 8, false, true));
+				case TEXTBOXSPAWN_BOOK:
+				textboxes.push_back(new BookTextBox(4, 4, 248, 184, 4, 4, 240, 176));
 				break;
 				
 				default:
 				break;
 			}
 		}
-		break;
 		//nextCommand();
-		//printf("CMD_SETTEXTBOXVISIBLE\n");
-		//break;
+		//printf("CMD_CREATETEXTBOX\n");
+		break;
 		
 		case CMD_FACECURRENT:
 		var1 = getIntArg();
@@ -402,19 +406,39 @@ void Script::executeCommand(){
 
 void Script::advance(){
 	if(textboxes.size() > 0){
-		if(textboxes.at(textboxes.size() - 1)->getWaitForInput()){
+		textboxtype t = textboxes.at(textboxes.size() - 1)->getType();
+		if(t == TEXTBOX_SPEECH){
+			textboxes.at(textboxes.size() - 1)->next();
+		} else {
+			heap[0] = textboxes.at(textboxes.size() - 1)->close();
+		}
+		/*if(textboxes.at(textboxes.size() - 1)->getWaitForInput()){
 			if(textboxes.at(textboxes.size() - 1)->hasChoice()){
 				heap[0] = textboxes.at(textboxes.size() - 1)->getChoice();
 			}
 			textboxes.at(textboxes.size() - 1)->advance();
 			//printf("advance\n");
-		}
+		}*/
 	}	
 }
 
 void Script::dirAction(dir direction){
 	if(textboxes.size() > 0){
-		if(textboxes.at(textboxes.size() - 1)->hasChoice()){// || textboxes.at(textboxes.size() - 1)->isBook()){
+		textboxtype t = textboxes.at(textboxes.size() - 1)->getType();
+		if(t == TEXTBOX_MENU){
+			if(direction == DIR_UP){
+				textboxes.at(textboxes.size() - 1)->prev();
+			} else if (direction == DIR_DOWN){
+				textboxes.at(textboxes.size() - 1)->next();
+			}
+		} else if (t == TEXTBOX_BOOK){
+			if(direction == DIR_LEFT){
+				textboxes.at(textboxes.size() - 1)->prev();
+			} else if (direction == DIR_RIGHT){
+				textboxes.at(textboxes.size() - 1)->next();
+			}
+		}
+		/*if(textboxes.at(textboxes.size() - 1)->hasChoice()){// || textboxes.at(textboxes.size() - 1)->isBook()){
 			if(direction == DIR_DOWN){
 				textboxes.at(textboxes.size() - 1)->next();
 			} else if (direction == DIR_UP){
@@ -426,19 +450,22 @@ void Script::dirAction(dir direction){
 			} else if (direction == DIR_LEFT){
 				textboxes.at(textboxes.size() - 1)->prevPage();
 			}
-		}
+		}*/
 	}
 }
 		
 
 std::string Script::run(){
-	//printf("a\n");
 	while(!scriptend){
+		//printf("uu, %ld\n", textboxes.size());
 		if(textboxes.size() > 0){
+			//printf("%d\n", (int) textboxes.at(textboxes.size() - 1)->isActive());
 			while(textboxes.at(textboxes.size() - 1)->isActive()){
+				//printf("scriptthread\n");
 				usleep(16666);
 			}
-			//printf("b\n");
+			//printf("2\n");
+			//printf("u, %d\n", (int) textboxes.at(textboxes.size() - 1)->isActive());
 			displayingtext = false;
 		}
 		executeCommand();

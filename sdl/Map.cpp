@@ -117,7 +117,7 @@ Map::Map(std::string f, int warpnum, dir direction){
 	player->setLocation(u[0], u[1]);
 	player->updateSpriteLocation();
 	player->setMovPer(getMovementPermission(u[0], u[1]));
-	delete u;
+	delete [] u;
 	player->setFacingDir(direction);
 	if(programmode == NORMAL_GAMEPLAY){
 		currentscript = new Script(-1, loadscript);

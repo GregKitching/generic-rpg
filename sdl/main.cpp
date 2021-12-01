@@ -20,6 +20,7 @@
 #include "ActiveEntity.h"
 #include "TextBox.h"
 #include "Script.h"
+#include "SoundHandler.h"
 #include "Globals.h"
 
 //using namespace std;
@@ -114,6 +115,7 @@ void quit(){
 	//letterA->free();
 	//TTF_CloseFont(font);
 	//font = NULL;
+	soundhandler->quit();
 	SDL_DetachThread(scriptthread);
 	SDL_FreeSurface(surface);
 	surface = NULL;
@@ -358,7 +360,7 @@ int getInteractableEntityAtPosition(int x, int y){
 
 void visibleTiles(int *range, int x, int y){//, Map *map){
 	range[0] = (x / tilesize) - 1;
-	range[1] = range[0] + 14;
+	range[1] = range[0] + vistilesxoffset;
 	/*if(range[0] < 0){	values outside bounds of map are now used to render outside tiles
 		range[0] = 0;
 	}
@@ -366,7 +368,7 @@ void visibleTiles(int *range, int x, int y){//, Map *map){
 		range[1] = map->getWidth() - 1;
 	}*/
 	range[2] = (y / tilesize) - 1;
-	range[3] = range[2] + 12;
+	range[3] = range[2] + vistilesyoffset;
 	/*if(range[2] < 0){
 		range[2] = 0;
 	}
@@ -391,7 +393,6 @@ void renderLayer(int layer, Map *map, TileSet *tileset, SpriteSheet *spritesheet
 			if(tileset->getTileObject(temp)->isAnimated() & animcycle > 63){
 				temp += 20;
 			}
-			//tileset->renderTile(temp, layer, srcrect, dstrect, spritesheet, animcycle > 63);
 			temp2 = tileset->getSubtileFromTile(temp, layer, 0);
 			srcrect->x = spritesheet->getSubtileX(temp2);
 			srcrect->y = spritesheet->getSubtileY(temp2);
@@ -463,7 +464,7 @@ void buttonAction(){
 		caninteract = false;
 		int *facingpos = player->getAdjacentTile(player->getFacingDir(), map);
 		int u = getInteractableEntityAtPosition(facingpos[0], facingpos[1]);
-		delete facingpos;
+		delete [] facingpos;
 		if(u != -1){
 			if(entities.at(u)->getType() < ENTTYPE_SCRIPT){
 				currentscript = new Script(u, entities.at(u)->getScript());
@@ -540,8 +541,7 @@ Uint32 renderFunc(Uint32 interval, void *param){
 						} else {
 							printf("No longer setting animation properties\n");
 						}
-					}
-						
+					}	
 					break;
 					
 					case SDLK_c:
@@ -723,6 +723,7 @@ Uint32 renderFunc(Uint32 interval, void *param){
 		} else if (e.type == SDL_MOUSEBUTTONUP){
 			clickaction = false;
 		}
+		//printf("b\n");
 		if(clickaction){
 			if(programmode == MAP_EDITOR){
 				if(setmovementpermissions){
@@ -784,14 +785,9 @@ Uint32 renderFunc(Uint32 interval, void *param){
 				}
 			}
 		}
-		/*for(int i = 0; i < entities.size(); i++){
-			if (entities.at(i).getMoveTimer() > 0){
-				entities.at(i).animate();
-			}
-		}*/
 		if(camerafollowplayer){
-			camposx = player->getSpriteXPos() - 92;
-			camposy = player->getSpriteYPos() - 67;
+			camposx = player->getSpriteXPos() - playerxoffset;
+			camposy = player->getSpriteYPos() - playeryoffset;
 		}
 		visibleTiles(visrange, camposx, camposy);
 		SDL_RenderClear(renderer);
@@ -804,32 +800,19 @@ Uint32 renderFunc(Uint32 interval, void *param){
 				renderMovPer(visrange, &srcrecttiles, &dstrecttiles);
 			}
 		}
-		/*if(maintextbox->getVisible()){
-			maintextbox->renderBox();
-			maintextbox->renderText();
-		}
-		if(maintextbox->isActive()){
-			maintextbox->tick();
-		}*/
+		//printf("Number of text boxes: %ld\n", textboxes.size());
 		if(textboxes.size() > 0){
+			//printf("d\n");
 			for(int i = 0; i < textboxes.size(); i++){
+				//printf("1\n");
 				textboxes.at(i)->renderBox();
+				//printf("2\n");
 				textboxes.at(i)->renderText();
-				/*if(textboxes.at(i)->isActive()){
-					
-				}/* else {
-					delete textboxes.at(i);
-					textboxes.pop_back();
-				}*/
+				//printf("3\n");
 			}
 			if(textboxes.at(textboxes.size() - 1)->isActive()){
-				if(textboxes.at(textboxes.size() - 1)->hasChoice()){
-					textboxes.at(textboxes.size() - 1)->renderCursor();
-				} else if (textboxes.at(textboxes.size() - 1)->isBook()){
-					textboxes.at(textboxes.size() - 1)->renderPageArrows();
-				} else {
-					textboxes.at(textboxes.size() - 1)->tick();
-				}
+				textboxes.at(textboxes.size() - 1)->renderArrows();
+				textboxes.at(textboxes.size() - 1)->tick();
 			}
 		}
 		SDL_RenderPresent(renderer);
@@ -879,7 +862,7 @@ void init(int loadfromfile, int mapw, int maph, std::string fname){
 		printf("Could not create renderer: %s\n", SDL_GetError());
 	} else {
 		SDL_SetRenderDrawColor(renderer, 0x00, 0x00, 0x00, 0x00);
-		SDL_RenderSetScale(renderer, 4.0f, 4.0f);
+		SDL_RenderSetScale(renderer, screenscale, screenscale);
 	}
 	int imgflags = IMG_INIT_PNG;
 	if(!(IMG_Init(imgflags) & imgflags)){
@@ -933,6 +916,8 @@ void init(int loadfromfile, int mapw, int maph, std::string fname){
 	dstrecttext.y = 0;
 	dstrecttext.w = subtilesize;
 	dstrecttext.h = subtilesize;
+	soundhandler = new SoundHandler();
+	int uu = soundhandler->loadSound("beep1");
 	basic = new SpriteSheet(basicspritesheetname, 8, 15, renderer);//Defined in terms of 16x16 tiles
 	characters = new SpriteSheet(characterspritesheetname, 12, 8, renderer);
 	font = new SpriteSheet(fontspritesheetname, 16, 3, renderer);

@@ -1,9 +1,28 @@
-This is an example of
-a book. Books will
-contain a lot of text,
-so the player should
-not have to wait for
-the text to scroll and
-should be able to flip
-between pages at their
-lesiure.
+This is an example of a book.
+(I know it's a bat, just
+pretend it's a book for now.)
+Books will contain a lot of
+text, so the player should
+not have to wait for the text
+to scroll and should be able
+to flip between pages at
+their lesiure.
+
+
+Lorem ipsum dolor sit amet,
+consectetur adipiscing elit,
+sed do eiusmod tempor
+incididunt ut labore et
+dolore magna aliqua. Ut enim
+ad minim veniam, quis
+nostrud exercitation ullamco
+laboris nisi ut aliquip ex
+ea commodo consequat. Duis
+aute irure dolor in
+reprehenderit in voluptate
+velit esse cillum dolore eu
+fugiat nulla pariatur.
+Excepteur sint occaecat
+cupidatat non proident, sunt
+in culpa qui officia deserunt
+mollit anim id est laborum.

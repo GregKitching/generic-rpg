@@ -3,6 +3,7 @@
 
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_image.h>
+#include <SDL2/SDL_mixer.h>
 #include <iostream>
 #include <fstream>
 #include <vector>
@@ -17,7 +18,11 @@
 #include "Entity.h"
 #include "ActiveEntity.h"
 #include "TextBox.h"
+#include "SpeechTextBox.h"
+#include "MenuTextBox.h"
+#include "BookTextBox.h"
 #include "Script.h"
+#include "SoundHandler.h"
 
 extern uint8_t *heap;
 extern pmode programmode;
@@ -35,5 +40,6 @@ extern SDL_Renderer *renderer;
 extern std::vector<TextBox*> textboxes;
 extern SDL_Texture *textboxtexture;
 extern ActiveEntity *player;
+extern SoundHandler *soundhandler;
 
 #endif

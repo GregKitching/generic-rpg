@@ -20,7 +20,7 @@ TileSet::TileSet(int u){
 	for(int i = 0; i < u; i++){
 		tiles[i] = new Tile(temp, false);
 	}
-	delete temp;
+	delete [] temp;
 }
 
 TileSet::TileSet(std::string f){
@@ -43,7 +43,7 @@ TileSet::TileSet(std::string f){
 			getline(tilesetfile, line);
 			tiles[i] = new Tile(temp, (bool) std::stoi(line));
 		}
-		delete temp;
+		delete [] temp;
 		//printf("%d\n", temp[0]);
 	}
 	tilesetfile.close();

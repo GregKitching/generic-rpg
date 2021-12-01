@@ -25,6 +25,7 @@ SDL_Renderer *renderer;
 std::vector<TextBox*> textboxes;
 SDL_Texture *textboxtexture;
 ActiveEntity *player;
+SoundHandler *soundhandler;
 
 Entity::Entity(enttype t, int x, int y, bool i, std::string sc, int e){
 	type = t;
