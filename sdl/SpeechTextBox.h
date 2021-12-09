@@ -15,7 +15,8 @@ class SpeechTextBox: public TextBox{
 		void prev();
 		void tick();
 		void reset();
-		int close();
+		int getValue();
+		void close();
 };
 
 #endif

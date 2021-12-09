@@ -11,6 +11,16 @@ Tile::Tile(int *subtiles, bool a){
 	layer1[1] = subtiles[5];
 	layer1[2] = subtiles[6];
 	layer1[3] = subtiles[7];
+	/*fl0 = new flipstate[4];
+	fl1 = new flipstate[4];
+	fl0[0] = FLIPSTATE_NONE;
+	fl0[0] = FLIPSTATE_NONE;
+	fl0[0] = FLIPSTATE_NONE;
+	fl0[0] = FLIPSTATE_NONE;
+	fl0[0] = FLIPSTATE_NONE;
+	fl0[0] = FLIPSTATE_NONE;
+	fl0[0] = FLIPSTATE_NONE;
+	fl0[0] = FLIPSTATE_NONE;*/
 	animated = a;
 }
 

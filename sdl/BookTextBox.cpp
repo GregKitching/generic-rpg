@@ -9,6 +9,7 @@
 #include "BookTextBox.h"
 
 BookTextBox::BookTextBox(int x, int y, int w, int h, int fx, int fy, int fw, int fh): TextBox(x, y, w, h, fx, fy, fw, fh){
+	scrollpos = 0;
 	pages = 0;
 	type = TEXTBOX_BOOK;
 }
@@ -85,7 +86,10 @@ void BookTextBox::reset(){
 	linesshown = 0;
 }
 
-int BookTextBox::close(){
-	active = false;
+int BookTextBox::getValue(){
 	return currentpage;
+}
+
+void BookTextBox::close(){
+	active = false;
 }

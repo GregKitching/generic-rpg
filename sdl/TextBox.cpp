@@ -34,7 +34,14 @@ TextBox::TextBox(int x, int y, int w, int h, int fx, int fy, int fw, int fh){
 }
 
 TextBox::~TextBox(){
-	//delete [] charsshown;
+	/*lines->clear();
+	//delete lines;
+	std::vector<int> u = {};
+	std::vector<std::string> u2 = {};
+	linelength.clear();
+	linelength.swap(u);
+	l.clear();
+	l.swap(u2);*/
 }
 
 void TextBox::setRect(SDL_Rect *rect, int x, int y, int w, int h){
@@ -84,6 +91,17 @@ void TextBox::renderBox(){
 	SDL_RenderCopy(renderer, textboxtexture, &srcrect, &dstrect);
 }
 
+int* TextBox::stringToInts(std::string s){
+	char *chars = new char[s.size() + 1];
+	strcpy(chars, s.c_str());
+	int *u = new int[s.size()];
+	for(int i = 0; i < s.size(); i++){
+		u[i] = (int) chars[i] - 32;
+	}
+	delete [] chars;
+	return u;
+}
+
 textboxtype TextBox::getType(){
 	return type;
 }
@@ -116,12 +134,12 @@ void TextBox::loadFile(std::string f){
 		}
 		textfile.close();
 		l.pop_back();//remove extra blank line
-		loadText();
+		loadText(l);
 	}
 	//delete l;
 }
 
-void TextBox::loadText(){//std::vector<std::string> *l){
+void TextBox::loadText(std::vector<std::string> l){
 	char *chars;
 	int *u;
 	for(int i = 0; i < l.size(); i++){
@@ -148,4 +166,37 @@ void TextBox::loadText(){//std::vector<std::string> *l){
 
 bool TextBox::fileLoaded(){
 	return fileloaded;
+}
+
+void TextBox::changeText(int linenum, int start, int length, std::string s){
+	int end = start + s.size();
+	if(linenum >= lines->size()){
+		printf("TextBox: Attemted to edit nonexistant line\n");
+	} else if (start < 0 | start >= linelength.at(linenum) | end < 0 | end > linelength.at(linenum) | start > end){
+		printf("TextBox: Malformed start and end values when attempting to edit text\n");
+		printf("%d, %d, %d\n", start, end, linelength.at(linenum));
+		for(int i = 0; i < linelength.at(linenum); i++){
+			printf("%c, ", (char) lines->at(linenum)[i] + 32);
+		}
+		printf("\n");
+	} else {
+		int *u = stringToInts(s);
+		for(int i = 0; i < s.size(); i++){
+			lines->at(linenum)[i + start] = u[i];
+		}
+		/*if(length != -1){
+			linelength.at(linenum) = length;
+		}*/
+		/*int *u = stringToInts(s);
+		lines->erase(linenum, linenum + 1);
+		lines->insert(u);*/
+	}
+}
+
+void TextBox::setText(std::vector<int*> *u){
+	lines = u;
+}
+
+std::vector<int*>* TextBox::getLines(){
+	return lines;
 }

@@ -115,7 +115,10 @@ void SpeechTextBox::reset(){
 	endflag = false;
 }
 
-int SpeechTextBox::close(){
-	active = false;
+int SpeechTextBox::getValue(){
 	return 0;
+}
+
+void SpeechTextBox::close(){
+	active = false;
 }

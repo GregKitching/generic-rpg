@@ -19,6 +19,7 @@ bool caninteract;
 bool canmove;
 SpriteSheet *font;
 Script *currentscript;
+BattleManager *battlemanager;
 bool renderflag;
 bool rendering;
 SDL_Renderer *renderer;

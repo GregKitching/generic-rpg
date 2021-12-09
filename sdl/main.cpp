@@ -21,6 +21,9 @@
 #include "TextBox.h"
 #include "Script.h"
 #include "SoundHandler.h"
+#include "Character.h"
+#include "BattleChoice.h"
+#include "BattleManager.h"
 #include "Globals.h"
 
 //using namespace std;
@@ -48,6 +51,8 @@ bool setmovementpermissions = false;
 bool camerafollowplayer = false;
 
 bool renderentities;
+
+bool inbattle;
 
 int camposx;
 int camposy;
@@ -106,6 +111,8 @@ SDL_Thread *scriptthread;
 int animcycle = 0;
 
 bool setanimproperties = false;
+
+std::vector<Character*> party;
 
 //uint8_t *heap;
 //TextBox *maintextbox;
@@ -459,6 +466,9 @@ void renderMovPer(int *range, SDL_Rect *srcrect, SDL_Rect *dstrect){
 }
 
 void buttonAction(){
+	if(battlemanager != NULL){
+		battlemanager->buttonAction();
+	}
 	if(caninteract){
 		//printf("1\n");
 		caninteract = false;
@@ -497,12 +507,18 @@ Uint32 renderFunc(Uint32 interval, void *param){
 					if(currentscript != NULL){
 						currentscript->dirAction(DIR_UP);
 					}
+					if(battlemanager != NULL){
+						battlemanager->dirAction(DIR_UP);
+					}
 					break;
 					
 					case SDLK_s:
 					skey = true;
 					if(currentscript != NULL){
 						currentscript->dirAction(DIR_DOWN);
+					}
+					if(battlemanager != NULL){
+						battlemanager->dirAction(DIR_DOWN);
 					}
 					break;
 					
@@ -529,6 +545,9 @@ Uint32 renderFunc(Uint32 interval, void *param){
 					/*if(programmode == TILESET_EDITOR){
 						switchLayer();
 					}*/
+					if(battlemanager != NULL){
+						battlemanager->backButtonAction();
+					}
 					break;
 					
 					case SDLK_z:
@@ -547,6 +566,14 @@ Uint32 renderFunc(Uint32 interval, void *param){
 					case SDLK_c:
 					if(programmode == MAP_EDITOR){
 						createEntity();
+					}
+					break;
+					
+					case SDLK_b:
+					if(battlemanager == NULL){
+						std::vector<Character*> enemies;
+						enemies.push_back(new Character("Fish", 1, 10, 0, 3, 1, 2, false));
+						battlemanager = new BattleManager(party, enemies);
 					}
 					break;
 					
@@ -843,6 +870,17 @@ int scriptThread(void *param){
 				}
 			} while (currentscript != NULL);
 		}
+		if(battlemanager == NULL){
+			usleep(16666);
+		} else {
+			caninteract = false;
+			canmove = false;
+			battlemanager->run();
+			delete battlemanager;
+			battlemanager = NULL;
+			caninteract = true;
+			canmove = true;
+		}
 	}
 	return 0;
 }
@@ -890,6 +928,24 @@ void init(int loadfromfile, int mapw, int maph, std::string fname){
 	if(programmode == MAP_EDITOR){
 		player->setRendered(false);
 	}
+	Character *playeru = new Character("Bob", 1, 20, 10, 5, 2, 3, true);
+	party.push_back(playeru);//new Character("Bob", 1, 20, 10, 5, 2, 3, true));
+	/*TextBox *b = new BattleTextBox(4, 4, 96, 80, 8, 8, 80, 72);
+	textboxes.push_back(b);
+	std::vector<std::string> s;
+	s.push_back("      ");
+	s.push_back("Lv. 0");
+	//s.push_back("");
+	s.push_back("HP: 000/000");
+	s.push_back("MP: 000/000");
+	b->loadText(s);
+	BattleTextBox *b2 = static_cast<BattleTextBox*>(b);
+	b2->setName("Bob");
+	b2->setLevel(1);
+	b2->setHP(20);
+	b2->setMaxHP(20);
+	b2->setMP(10);
+	b2->setMaxMP(10);*/
 	//en = new Entity(ENTTYPE_NPC, 12, 10, 7, true, true, true, true, DIR_DOWN, "aaab");
 	//entities.push_back(*en);
 	srcrecttiles.x = 0;
@@ -918,6 +974,7 @@ void init(int loadfromfile, int mapw, int maph, std::string fname){
 	dstrecttext.h = subtilesize;
 	soundhandler = new SoundHandler();
 	int uu = soundhandler->loadSound("beep1");
+	inbattle = false;
 	basic = new SpriteSheet(basicspritesheetname, 8, 15, renderer);//Defined in terms of 16x16 tiles
 	characters = new SpriteSheet(characterspritesheetname, 12, 8, renderer);
 	font = new SpriteSheet(fontspritesheetname, 16, 3, renderer);

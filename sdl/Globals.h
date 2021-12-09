@@ -21,8 +21,12 @@
 #include "SpeechTextBox.h"
 #include "MenuTextBox.h"
 #include "BookTextBox.h"
+#include "StaticTextBox.h"
 #include "Script.h"
 #include "SoundHandler.h"
+#include "Character.h"
+#include "BattleChoice.h"
+#include "BattleManager.h"
 
 extern uint8_t *heap;
 extern pmode programmode;
@@ -34,6 +38,7 @@ extern bool canmove;
 //extern SDL_Texture textboxtexture;
 extern SpriteSheet *font;
 extern Script *currentscript;
+extern BattleManager *battlemanager;
 extern bool renderflag;
 extern bool rendering;
 extern SDL_Renderer *renderer;

@@ -222,7 +222,15 @@ void Script::executeCommand(){
 		case CMD_DESTROYTEXTBOX:
 		//printf("CMD_DESTROYTEXTBOX\n");
 		if(textboxes.size() > 0){
-			delete textboxes.at(textboxes.size() - 1);
+			if(textboxes.at(textboxes.size() - 1)->getType() == TEXTBOX_SPEECH){
+				delete static_cast<SpeechTextBox*>(textboxes.at(textboxes.size() - 1));
+			} else if(textboxes.at(textboxes.size() - 1)->getType() == TEXTBOX_MENU){
+				delete static_cast<MenuTextBox*>(textboxes.at(textboxes.size() - 1));
+			} else if(textboxes.at(textboxes.size() - 1)->getType() == TEXTBOX_BOOK){
+				delete static_cast<BookTextBox*>(textboxes.at(textboxes.size() - 1));
+			} else if(textboxes.at(textboxes.size() - 1)->getType() == TEXTBOX_STATIC){
+				delete static_cast<StaticTextBox*>(textboxes.at(textboxes.size() - 1));
+			}
 			textboxes.pop_back();
 		} else {
 			printf("The text box stack is already empty.\n");
@@ -410,7 +418,8 @@ void Script::advance(){
 		if(t == TEXTBOX_SPEECH){
 			textboxes.at(textboxes.size() - 1)->next();
 		} else {
-			heap[0] = textboxes.at(textboxes.size() - 1)->close();
+			heap[0] = textboxes.at(textboxes.size() - 1)->getValue();
+			textboxes.at(textboxes.size() - 1)->close();
 		}
 		/*if(textboxes.at(textboxes.size() - 1)->getWaitForInput()){
 			if(textboxes.at(textboxes.size() - 1)->hasChoice()){
